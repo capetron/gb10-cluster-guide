@@ -4,6 +4,8 @@
 
 By Petronella Technology Group, Inc. (Raleigh, North Carolina). License: CC BY 4.0.
 
+Read it as a website: https://capetron.github.io/gb10-cluster-guide/ (built from this repo by `site/build.py`, published on the `gh-pages` branch).
+
 This guide documents what we built and measured while clustering six NVIDIA GB10 Grace
 Blackwell workstations: four MSI EdgeXpert MS-C931 units and two NVIDIA DGX Spark
 Founders Edition units, joined by two MikroTik CRS812-8DS-2DQ-2DDQ-RM switches with a
@@ -67,6 +69,7 @@ How many GB10 workstations?
 | [docs/05-serving-models.md](docs/05-serving-models.md) | vLLM on sm_121: why the stock image fails, the community patch chain, four-node GLM-5.3-Flash and Qwen3.8-Flash-Next results, the H200 reference, six-node findings, NCCL over RoCE settings |
 | [docs/06-bill-of-materials.md](docs/06-bill-of-materials.md) | Cables, switch, breakout and ISL DACs, what to budget |
 | [docs/07-faq.md](docs/07-faq.md) | Short answers to the questions we get asked |
+| [docs/08-parts-and-where-to-buy.md](docs/08-parts-and-where-to-buy.md) | The NVIDIA-approved cables, other parts owners report working, the switch parts, and where each is sold |
 | [docs/SANITIZATION-NOTES.md](docs/SANITIZATION-NOTES.md) | What was generalized from our production notes to make this public |
 
 ## The numbers in one screen

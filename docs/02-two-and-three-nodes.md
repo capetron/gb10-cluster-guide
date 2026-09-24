@@ -33,10 +33,20 @@ Cable: https://petronellatech.com/hardware/dgx-spark-cluster-cable/
 
 NVIDIA's "Connect Three DGX Spark in a Ring Topology" playbook uses "three QSFP cables
 for direct 200GbE connection" between three systems. Each unit uses both of its QSFP
-ports: Port 1 of unit A to Port 0 of unit B, Port 1 of B to Port 0 of C, Port 1 of C to
-Port 0 of A. Every unit has a direct link to every other unit, so this is a full mesh,
-not a bus. Prerequisites match the two-node playbook plus current OS and firmware on all
-three.
+ports, and every cable joins a Port 0 to a Port 1, exactly as the playbook wires it:
+
+| Cable | From | To |
+|---|---|---|
+| 1 | Node 1, Port 0 | Node 2, Port 1 |
+| 2 | Node 2, Port 0 | Node 3, Port 1 |
+| 3 | Node 3, Port 0 | Node 1, Port 1 |
+
+Port 0 is the QSFP cage next to the RJ45 jack; Port 1 is the one further away. The
+mapping matters because the playbook's netplan files put the matching subnet on each
+Port 0 / Port 1 pair. Wire Port 0 to Port 0 and every interface still shows link up, but
+the two ends of that cable sit in different subnets and ping fails. Every unit has a
+direct link to every other unit, so this is a full mesh, not a bus. Prerequisites match
+the two-node playbook plus current OS and firmware on all three.
 
 This is the switchless ceiling. With two ports per unit, a fourth unit cannot reach every
 other unit directly; you can wire four units as four point-to-point links, but then two

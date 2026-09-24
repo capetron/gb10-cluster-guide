@@ -17,7 +17,8 @@ at 200G. The 400G rating is the cable's capability and buys headroom, not speed.
 https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/
 
 **Do I need one cable or two between two units?**
-One cable gives you the full 200 Gb/s, because one physical port is two PCIe Gen 5 x4
+One cable gives you the full link: we measure 196 Gb/s (about 24.5 GB/s) with both halves
+running, because one physical port is two PCIe Gen 5 x4
 halves and NCCL uses both. You need both halves **configured** (two interfaces, two
 addresses), not two cables. A second cable between the same two units is a second link,
 not a faster one, and each unit only has two ports. [01-hardware.md](01-hardware.md).
@@ -36,7 +37,9 @@ network configuration system (netplan on the DGX Spark, NetworkManager on the MS
 
 **Can I cluster three units without a switch?**
 Yes. NVIDIA's "Connect Three DGX Spark in a Ring Topology" playbook uses three cables,
-each unit using both ports. Full pairwise connectivity. Ring kit:
+each unit using both ports: Node 1 Port 0 to Node 2 Port 1, Node 2 Port 0 to Node 3 Port 1,
+Node 3 Port 0 to Node 1 Port 1. Every cable joins a Port 0 to a Port 1. Full pairwise
+connectivity. [02-two-and-three-nodes.md](02-two-and-three-nodes.md). Ring kit:
 https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/
 
 **Can I cluster four without a switch?**

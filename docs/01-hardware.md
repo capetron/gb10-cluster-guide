@@ -68,7 +68,7 @@ for the commands):
 | One half (one RDMA device) | 111.86 Gb/s |
 | Both halves concurrently | 98.04 + 98.04 = 196.08 Gb/s |
 
-That 196 Gb/s is 98 percent of the 200 Gb/s line rate. Field reports we have seen from
+That 196 Gb/s (about 24.5 GB/s) is 98 percent of the 200 Gb/s line rate. Field reports we have seen from
 other GB10 owners land at 185 to 190 Gb/s dual-port, in the same band.
 
 A related trap: because both halves share one wire, LLDP on the second half can look like
