@@ -87,7 +87,8 @@ ConnectX-7 negotiates them at 200 Gb/s, which is the port's documented ceiling. 
 rating is the cable's capability, not the link's; the same cable on a 400G NIC would run at
 400G. On a GB10 it buys nothing beyond headroom and compatibility. It also means a
 "200G" cable is not required; what is required is a QSFP112 form factor that the NIC
-recognizes. The cable we sell is the NJAAKK0006 / LMTQF022-SD-R spec in 0.5 m, 32 AWG:
+recognizes. The cable we sell is the Amphenol NJAAKR-0006 (0.5 m, 30 AWG), built to the
+NJAAKK0006 / LMTQF022-SD-R spec:
 https://petronellatech.com/hardware/dgx-spark-cluster-cable/ . A longer write-up of the
 bits-versus-bytes arithmetic is at
 https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/ .

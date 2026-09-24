@@ -41,8 +41,8 @@ All of these are short passive QSFP DACs for the same port. On a GB10 they link 
 | Amphenol NJAAKR-0006 | 0.5 m | Same Amphenol QSFP112 family; owners report full-rate links | DigiKey, which forum members report ships internationally |
 
 In the United States, Petronella Technology Group, Inc. (the maintainer of this guide)
-stocks a 0.5 m QSFP112 passive DAC to the NJAAKK0006 / LMTQF022-SD-R specification and
-ships it in 1 to 3 business days:
+stocks the Amphenol NJAAKR-0006 (0.5 m QSFP112 passive DAC, 30 AWG), a cable in the
+same Amphenol family built to the NJAAKK0006 / LMTQF022-SD-R specification, and ships it in 1 to 3 business days:
 [DGX Spark and GB10 cluster cable](https://petronellatech.com/hardware/dgx-spark-cluster-cable/).
 The same cable fits every GB10 chassis; these pages carry the fit notes for each one:
 

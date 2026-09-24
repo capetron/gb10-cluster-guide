@@ -9,9 +9,9 @@ and the same cable.
 
 ## Cables
 
-The cluster cable is a 0.5 m (about 19 in) QSFP112 passive direct-attach copper cable,
-32 AWG, to the NVIDIA-approved Amphenol NJAAKK0006 / Luxshare LMTQF022-SD-R
-specification. It is rated 400G and links at 200G on every GB10 (see
+The cluster cable is a 0.5 m (about 19 in) QSFP112 passive direct-attach copper cable
+to the NVIDIA-approved Amphenol NJAAKK0006 / Luxshare LMTQF022-SD-R specification (the
+one we stock is Amphenol NJAAKR-0006, 30 AWG). It is rated 400G and links at 200G on every GB10 (see
 [01-hardware.md](01-hardware.md)). One cable per node in every topology below.
 
 | Item | Qty for 2 nodes | Qty for 3 nodes (ring) | Qty for N nodes on a switch | Price |
