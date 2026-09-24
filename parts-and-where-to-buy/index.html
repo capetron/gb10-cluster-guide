@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DGX Spark Cluster Parts and Where to Buy Them</title>
+<meta name="description" content="Which QSFP112 cable fits a DGX Spark or GB10 cluster: NVIDIA-approved Amphenol and Luxshare parts, Lenovo 4X91U42988, switches, and sellers.">
+<link rel="canonical" href="https://capetron.github.io/gb10-cluster-guide/parts-and-where-to-buy/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GB10 Cluster Guide">
+<meta property="og:title" content="DGX Spark Cluster Parts and Where to Buy Them">
+<meta property="og:description" content="Which QSFP112 cable fits a DGX Spark or GB10 cluster: NVIDIA-approved Amphenol and Luxshare parts, Lenovo 4X91U42988, switches, and sellers.">
+<meta property="og:url" content="https://capetron.github.io/gb10-cluster-guide/parts-and-where-to-buy/">
+<meta property="og:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
+<meta property="og:locale" content="en_US">
+<meta property="article:modified_time" content="2026-09-24">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="DGX Spark Cluster Parts and Where to Buy Them">
+<meta name="twitter:description" content="Which QSFP112 cable fits a DGX Spark or GB10 cluster: NVIDIA-approved Amphenol and Luxshare parts, Lenovo 4X91U42988, switches, and sellers.">
+<meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "DGX Spark Cluster Parts and Where to Buy Them", "description": "Which QSFP112 cable fits a DGX Spark or GB10 cluster: NVIDIA-approved Amphenol and Luxshare parts, Lenovo 4X91U42988, switches, and sellers.", "url": "https://capetron.github.io/gb10-cluster-guide/parts-and-where-to-buy/", "dateModified": "2026-09-24", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+</head>
+<body>
+<header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
+<span class="tag">DGX Spark and every GB10 workstation</span></header>
+<div class="wrap">
+<nav class="side" aria-label="Guide sections"><ol><li><a href="../">Overview</a></li><li><a href="../hardware/">Hardware</a></li><li><a href="../two-and-three-nodes/">Two and three nodes</a></li><li><a href="../switched-fabric/">Switched fabric</a></li><li><a href="../validation/">Validation</a></li><li><a href="../serving-models/">Serving models</a></li><li><a href="../bill-of-materials/">Bill of materials</a></li><li><a href="../faq/">FAQ</a></li><li><a href="../parts-and-where-to-buy/" aria-current="page">Parts and where to buy</a></li><li><a href="../sanitization-notes/">Sanitization notes</a></li></ol></nav>
+<main>
+<article>
+<h1 id="08-parts-and-where-to-buy">08. Parts and where to buy</h1>
+<p><strong>Summary.</strong> Every GB10 workstation clusters over the same ConnectX-7 QSFP112 ports, so
+the parts list is short: one short QSFP112 passive direct-attach copper (DAC) cable per
+link for two or three nodes, and for four or more a 200G-capable switch, breakout DACs
+and one node cable per unit. This page lists the parts NVIDIA approves, the other parts
+owners report working, and where each one is sold. It is a buyer's reference, not a
+recommendation of one seller. Check current stock and pricing with each seller.</p>
+<h2 id="how-many-cables">How many cables</h2>
+<table>
+<thead>
+<tr>
+<th>Nodes</th>
+<th>Topology</th>
+<th>Node cables</th>
+<th>Other parts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>Direct, Port 0 to Port 0</td>
+<td>1</td>
+<td>none</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Switchless ring (NVIDIA's documented maximum without a switch)</td>
+<td>3</td>
+<td>none</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Switch (NVIDIA's documented switch playbook covers up to four)</td>
+<td>4</td>
+<td>one 200G switch, breakout DACs</td>
+</tr>
+<tr>
+<td>5 to 8</td>
+<td>Switch, measured by us, not an NVIDIA-supported configuration</td>
+<td>one per node</td>
+<td>switch(es), breakout DACs, an inter-switch DAC for two switches</td>
+</tr>
+</tbody>
+</table>
+<p>Three-node ring wiring, from NVIDIA's ring playbook: Node 1 Port 0 to Node 2 Port 1,
+Node 2 Port 0 to Node 3 Port 1, Node 3 Port 0 to Node 1 Port 1. Every cable joins a
+Port 0 to a Port 1. Details in <a href="../two-and-three-nodes/">02-two-and-three-nodes.md</a>.</p>
+<p>One cable carries the whole link. The port is two PCIe Gen 5 x4 halves on one wire, and
+with both halves configured we measure 196 Gb/s, about 24.5 GB/s, per cable
+(<a href="../validation/">04-validation.md</a>). A second cable between the same two units adds a
+second link, not more speed.</p>
+<h2 id="node-cables">Node cables</h2>
+<p>All of these are short passive QSFP DACs for the same port. On a GB10 they link at
+200 Gb/s; a 400G rating on the label is headroom, not extra speed
+(<a href="../hardware/">01-hardware.md</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Length</th>
+<th>Status</th>
+<th>Where it is sold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amphenol NJAAKK-N911</td>
+<td>400 mm</td>
+<td>NVIDIA-approved ("QSFP to QSFP112, 32AWG, 400mm, LSZH" in the DGX Spark user guide)</td>
+<td>Distributors; also the part number on NVIDIA's own stacking-cable listings</td>
+</tr>
+<tr>
+<td>Amphenol NJAAKK0006</td>
+<td>0.5 m</td>
+<td>NVIDIA-approved (the guide calls it the 0.5 m version of NJAAKK-N911)</td>
+<td>Distributors</td>
+</tr>
+<tr>
+<td>Luxshare LMTQF022-SD-R</td>
+<td>400 mm</td>
+<td>NVIDIA-approved ("QSFP112 400G DAC Cable, 400mm, 30AWG")</td>
+<td>Distributors</td>
+</tr>
+<tr>
+<td>NVIDIA Marketplace "QSFP Cable 0.4m for DGX Spark"</td>
+<td>0.4 m</td>
+<td>The cable NVIDIA's clustering playbooks link</td>
+<td>NVIDIA Marketplace</td>
+</tr>
+<tr>
+<td>Lenovo 4X91U42988 (ThinkStation PGX QSFP Link Cable)</td>
+<td>0.4 m</td>
+<td>Lenovo first-party; owners on the NVIDIA developer forum report full-rate links between GB10 units</td>
+<td>Lenovo.com and resellers such as CDW, Connection and AVADirect. Forum buyers in August 2026 reported orders shipping from overseas in one to two weeks</td>
+</tr>
+<tr>
+<td>Amphenol NJAAKR-0006</td>
+<td>0.5 m</td>
+<td>Same Amphenol QSFP112 family; owners report full-rate links</td>
+<td>DigiKey, which forum members report ships internationally</td>
+</tr>
+</tbody>
+</table>
+<p>In the United States, Petronella Technology Group, Inc. (the maintainer of this guide)
+stocks a 0.5 m QSFP112 passive DAC to the NJAAKK0006 / LMTQF022-SD-R specification and
+ships it in 1 to 3 business days:
+<a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">DGX Spark and GB10 cluster cable</a>.
+The same cable fits every GB10 chassis; these pages carry the fit notes for each one:</p>
+<ul>
+<li><a href="https://petronellatech.com/hardware/asus-gx10-cluster-cable/">ASUS Ascent GX10 cluster cable</a></li>
+<li><a href="https://petronellatech.com/hardware/dell-pro-max-gb10-cluster-cable/">Dell Pro Max with GB10 cluster cable</a></li>
+<li><a href="https://petronellatech.com/hardware/msi-edgexpert-cluster-cable/">MSI EdgeXpert cluster cable</a></li>
+<li><a href="https://petronellatech.com/hardware/hp-zgx-nano-cluster-cable/">HP ZGX Nano cluster cable</a></li>
+<li><a href="https://petronellatech.com/hardware/lenovo-thinkstation-pgx-cluster-cable/">Lenovo ThinkStation PGX cluster cable</a></li>
+<li><a href="https://petronellatech.com/hardware/acer-veriton-gn100-cluster-cable/">Acer Veriton GN100 cluster cable</a></li>
+<li><a href="https://petronellatech.com/hardware/gigabyte-ai-top-atom-cluster-cable/">Gigabyte AI TOP ATOM cluster cable</a></li>
+</ul>
+<p>How to choose: all of the cables above fit the same port, so choose on length and timing.
+The 0.4 m parts suit units stacked directly on each other; 0.5 m gives a few more inches
+for side-by-side units and for the longest run in a three-node ring. Outside the United
+States, or with no deadline, the Lenovo part is a sensible low-cost route.</p>
+<h2 id="switch-and-switch-cables-four-nodes-or-more">Switch and switch cables (four nodes or more)</h2>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it does</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MikroTik CRS812-8DS-2DQ-2DDQ-RM</td>
+<td>2 x 400G QSFP56-DD, 2 x 200G QSFP56, 8 x 50G SFP56</td>
+<td>What we run. Each DD port breaks out to 2 x 200G, so one switch serves four nodes on breakouts, six with the native 200G ports. See <a href="../switched-fabric/">03-switched-fabric.md</a></td>
+</tr>
+<tr>
+<td>MikroTik CRS804</td>
+<td>200G switch that other GB10 owners use</td>
+<td>Often out of stock in 2026; we have no measurements on it</td>
+</tr>
+<tr>
+<td>QSFP56-DD to 2 x QSFP56 breakout DAC (we used NADDOD Q2Q56-400G-CU1, MikroTik-coded)</td>
+<td>Two nodes per DD port</td>
+<td>The DD end does not auto-negotiate; force 200G-baseCR4 on the lane masters</td>
+</tr>
+<tr>
+<td>200G QSFP56 DAC</td>
+<td>Inter-switch link for two switches</td>
+<td>A spare QSFP112 node cable worked for us; MikroTik does not vendor-lock DACs</td>
+</tr>
+</tbody>
+</table>
+<p>Quantities and a fabric budget by node count are in
+<a href="../bill-of-materials/">06-bill-of-materials.md</a>.</p>
+<h2 id="before-you-buy-more-hardware">Before you buy more hardware</h2>
+<p>Most "slow cluster" reports are configuration, not parts: a link that needs a firmware
+update or a full power drain, MTU 1500 somewhere in the path, a second bridge on the
+switch, or a test that only uses one PCIe half. Run the checks in
+<a href="../validation/">04-validation.md</a> first.</p>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>NVIDIA DGX Spark User Guide, ConnectX-7 Networking (approved cables, 200 Gb/s per port, direct up to three systems, switch up to four): <a href="https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html">https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html</a></li>
+<li>NVIDIA, Connect Three DGX Spark in a Ring Topology (port-by-port ring wiring): <a href="https://build.nvidia.com/spark/connect-three-sparks">https://build.nvidia.com/spark/connect-three-sparks</a></li>
+<li>NVIDIA developer forum, owner reports on the Lenovo 4X91U42988 and Amphenol NJAAKR-0006 (August and September 2026): <a href="https://forums.developer.nvidia.com/t/381031">https://forums.developer.nvidia.com/t/381031</a> , <a href="https://forums.developer.nvidia.com/t/362679">https://forums.developer.nvidia.com/t/362679</a> , <a href="https://forums.developer.nvidia.com/t/362403">https://forums.developer.nvidia.com/t/362403</a></li>
+<li>Our measurements and purchase notes, 2026-08-15 to 2026-08-31 (<a href="../validation/">04-validation.md</a>, <a href="../bill-of-materials/">06-bill-of-materials.md</a>)</li>
+</ul>
+</article>
+<p class="src"><a href="https://github.com/capetron/gb10-cluster-guide/blob/main/docs/08-parts-and-where-to-buy.md">View or correct this page on GitHub</a></p>
+</main>
+</div>
+<footer>
+<p>Maintained by <a href="https://petronellatech.com/">Petronella Technology Group, Inc.</a>. Text licensed
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Source: <a href="https://github.com/capetron/gb10-cluster-guide">github.com/capetron/gb10-cluster-guide</a>.</p>
+</footer>
+</body>
+</html>

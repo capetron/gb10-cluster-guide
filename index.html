@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clustering NVIDIA GB10 Workstations: DGX Spark Cluster Guide</title>
+<meta name="description" content="How to cluster NVIDIA GB10 workstations (DGX Spark and OEM units): one cable for two, a three-node ring, and a measured 200G RoCE switch fabric.">
+<link rel="canonical" href="https://capetron.github.io/gb10-cluster-guide/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GB10 Cluster Guide">
+<meta property="og:title" content="Clustering NVIDIA GB10 Workstations: DGX Spark Cluster Guide">
+<meta property="og:description" content="How to cluster NVIDIA GB10 workstations (DGX Spark and OEM units): one cable for two, a three-node ring, and a measured 200G RoCE switch fabric.">
+<meta property="og:url" content="https://capetron.github.io/gb10-cluster-guide/">
+<meta property="og:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
+<meta property="og:locale" content="en_US">
+<meta property="article:modified_time" content="2026-09-05">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Clustering NVIDIA GB10 Workstations: DGX Spark Cluster Guide">
+<meta name="twitter:description" content="How to cluster NVIDIA GB10 workstations (DGX Spark and OEM units): one cable for two, a three-node ring, and a measured 200G RoCE switch fabric.">
+<meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<link rel="stylesheet" href="style.css">
+<link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Clustering NVIDIA GB10 Workstations: DGX Spark Cluster Guide", "description": "How to cluster NVIDIA GB10 workstations (DGX Spark and OEM units): one cable for two, a three-node ring, and a measured 200G RoCE switch fabric.", "url": "https://capetron.github.io/gb10-cluster-guide/", "dateModified": "2026-09-05", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+</head>
+<body>
+<header class="top"><a class="brand" href="./">GB10 Cluster Guide</a>
+<span class="tag">DGX Spark and every GB10 workstation</span></header>
+<div class="wrap">
+<nav class="side" aria-label="Guide sections"><ol><li><a href="./" aria-current="page">Overview</a></li><li><a href="hardware/">Hardware</a></li><li><a href="two-and-three-nodes/">Two and three nodes</a></li><li><a href="switched-fabric/">Switched fabric</a></li><li><a href="validation/">Validation</a></li><li><a href="serving-models/">Serving models</a></li><li><a href="bill-of-materials/">Bill of materials</a></li><li><a href="faq/">FAQ</a></li><li><a href="parts-and-where-to-buy/">Parts and where to buy</a></li><li><a href="sanitization-notes/">Sanitization notes</a></li></ol></nav>
+<main>
+<article>
+<h1 id="clustering-nvidia-gb10-workstations">Clustering NVIDIA GB10 workstations</h1>
+<p><strong>Two nodes, a three-node ring, and a switched 200G RoCE fabric for four or more.</strong></p>
+<p>By Petronella Technology Group, Inc. (Raleigh, North Carolina). License: CC BY 4.0.</p>
+<p>Read it as a website: <a href="https://capetron.github.io/gb10-cluster-guide/">https://capetron.github.io/gb10-cluster-guide/</a> (built from this repo by <code>site/build.py</code>, published on the <code>gh-pages</code> branch).</p>
+<p>This guide documents what we built and measured while clustering six NVIDIA GB10 Grace
+Blackwell workstations: four MSI EdgeXpert MS-C931 units and two NVIDIA DGX Spark
+Founders Edition units, joined by two MikroTik CRS812-8DS-2DQ-2DDQ-RM switches with a
+200G inter-switch link, running vLLM tensor-parallel and expert-parallel serving across
+the fabric. As far as we know it is the only public write-up of a switched multi-node GB10
+fabric with measured RDMA and token-throughput numbers. Every number here comes from our
+own logs or from NVIDIA and vendor documentation, and each document ends with its sources.</p>
+<p>We sell the 0.5 m QSFP112 400G direct-attach cable that every GB10 workstation needs for
+clustering. That is why this guide exists. We have tried to keep the product links to the
+places where a reader would want them (the bill of materials, the decision tree, and the
+spots where the text says "the cable") and nowhere else.</p>
+<h2 id="who-this-is-for">Who this is for</h2>
+<ul>
+<li>Anyone with two or three GB10 workstations who wants them to work as one memory pool.</li>
+<li>Anyone with four or more who needs to pick a switch, configure it correctly on the first
+  try, and prove the fabric is running at line rate before blaming the model.</li>
+<li>Anyone deciding whether to buy a fourth, sixth, or eighth unit, and what that buys.</li>
+</ul>
+<h2 id="decision-tree">Decision tree</h2>
+<pre><code>How many GB10 workstations?
+
+  1  -&gt;  No cable needed. Read docs/05-serving-models.md for what a single unit does
+         (a 128 GB unified pool, roughly 200B-parameter models, memory-bandwidth bound).
+
+  2  -&gt;  One cable, port to port. NVIDIA's &quot;Connect Two Sparks&quot; playbook.
+         Full 200 Gb/s needs traffic on both PCIe halves of the port (NCCL does this).
+         Read docs/02-two-and-three-nodes.md.
+         Cable: https://petronellatech.com/hardware/dgx-spark-cluster-cable/
+
+  3  -&gt;  Three cables in a ring, each unit uses both QSFP ports. NVIDIA-official,
+         switchless. This is the switchless ceiling: each unit has only two ports.
+         Read docs/02-two-and-three-nodes.md.
+         Ring kit (3-pack): https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/
+
+  4+ -&gt;  A 200G-capable switch. We used MikroTik CRS812-8DS-2DQ-2DDQ-RM with
+         QSFP56-DD to 2x QSFP56 breakout DACs and the same 0.5 m QSFP112 cable
+         from each node to the breakout. One node cable per unit.
+         Read docs/03-switched-fabric.md, then docs/04-validation.md.
+         NVIDIA's documented switch playbook covers up to four systems; six on
+         two switches (what we run) is outside that envelope and is described
+         here as measured, not as supported.
+
+  6  -&gt;  One model will not span six with the checkpoints we tried (tensor
+         parallel needs a divisor of the head and expert counts). Run pools
+         of pairs or a four-node group plus a pair. Eight divides cleaner.
+         Read docs/05-serving-models.md, &quot;Six nodes&quot;.
+</code></pre>
+<h2 id="table-of-contents">Table of contents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="hardware/">docs/01-hardware.md</a></td>
+<td>The GB10 variants, what the ConnectX-7 port really is (two PCIe Gen 5 x4 halves), why the cable is 400G-rated while the link is 200G, and the 273 GB/s memory bus the link is competing with</td>
+</tr>
+<tr>
+<td><a href="two-and-three-nodes/">docs/02-two-and-three-nodes.md</a></td>
+<td>One cable, the three-cable ring, addressing, MTU 9000, link checks, and what a bond does not give you</td>
+</tr>
+<tr>
+<td><a href="switched-fabric/">docs/03-switched-fabric.md</a></td>
+<td>The CRS812 build: forcing the DD breakout to 200G-baseCR4, jumbo frames, the inter-switch link, the RSTP trap with dual uplinks, the second-bridge trap that dropped 196 Gb/s to 5 Gb/s, and what we settled on</td>
+</tr>
+<tr>
+<td><a href="validation/">docs/04-validation.md</a></td>
+<td>The ib_write_bw and iperf3 matrix (intra-pod, cross-pod, bidirectional ISL) with the measured numbers, how to reproduce them, and what packet_seq_err means</td>
+</tr>
+<tr>
+<td><a href="serving-models/">docs/05-serving-models.md</a></td>
+<td>vLLM on sm_121: why the stock image fails, the community patch chain, four-node GLM-5.3-Flash and Qwen3.8-Flash-Next results, the H200 reference, six-node findings, NCCL over RoCE settings</td>
+</tr>
+<tr>
+<td><a href="bill-of-materials/">docs/06-bill-of-materials.md</a></td>
+<td>Cables, switch, breakout and ISL DACs, what to budget</td>
+</tr>
+<tr>
+<td><a href="faq/">docs/07-faq.md</a></td>
+<td>Short answers to the questions we get asked</td>
+</tr>
+<tr>
+<td><a href="parts-and-where-to-buy/">docs/08-parts-and-where-to-buy.md</a></td>
+<td>The NVIDIA-approved cables, other parts owners report working, the switch parts, and where each is sold</td>
+</tr>
+<tr>
+<td><a href="sanitization-notes/">docs/SANITIZATION-NOTES.md</a></td>
+<td>What was generalized from our production notes to make this public</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-numbers-in-one-screen">The numbers in one screen</h2>
+<p>All measured on our fabric; details and methodology in <a href="validation/">docs/04-validation.md</a>
+and <a href="serving-models/">docs/05-serving-models.md</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Measurement</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Direct cable, one PCIe half, ib_write_bw</td>
+<td>111.86 Gb/s</td>
+</tr>
+<tr>
+<td>Direct cable, both halves concurrently</td>
+<td>98.04 + 98.04 = 196.08 Gb/s</td>
+</tr>
+<tr>
+<td>Through the switch, both halves, crossing the switch ASIC</td>
+<td>98.0 + 98.0 = 196 Gb/s</td>
+</tr>
+<tr>
+<td>DGX Spark pair through the switch, one half</td>
+<td>109.11 Gb/s</td>
+</tr>
+<tr>
+<td>Cross-switch over the 200G ISL, one flow</td>
+<td>109.08 Gb/s (no measurable ISL penalty)</td>
+</tr>
+<tr>
+<td>Two same-direction 100G flows into the 200G ISL</td>
+<td>81.92 + 81.90 = 163.8 Gb/s (fair split)</td>
+</tr>
+<tr>
+<td>Six nodes, three concurrent pairs, ISL bidirectional</td>
+<td>109.19 + 109.10 + 109.14 = 327.4 Gb/s aggregate</td>
+</tr>
+<tr>
+<td>Second bridge on the switch (the trap)</td>
+<td>196 to 4.85 Gb/s</td>
+</tr>
+<tr>
+<td>GLM-5.3-Flash NVFP4, TP4, decode (prose / code / math)</td>
+<td>26.5 / 38.1 / 46.7 tok/s</td>
+</tr>
+<tr>
+<td>GLM-5.3-Flash NVFP4, TP4, prefill (warm)</td>
+<td>3,840 tok/s, TTFT 2.3 s at 8.9k tokens</td>
+</tr>
+<tr>
+<td>GLM-5.3-Flash NVFP4, TP4, KV cache</td>
+<td>2,246,948 tokens (16 GiB fp8 per rank)</td>
+</tr>
+<tr>
+<td>Qwen3.8-Flash-Next NVFP4, TP4 + expert parallel, decode</td>
+<td>39.6 / 57.0 / 76.9 tok/s</td>
+</tr>
+<tr>
+<td>Qwen3.8-Flash-Next NVFP4, TP4 + expert parallel, six streams</td>
+<td>167.4 tok/s aggregate</td>
+</tr>
+<tr>
+<td>Six nodes as three TP2 pairs, pool aggregate</td>
+<td>~386 tok/s decode, ~9,450 tok/s prefill</td>
+</tr>
+</tbody>
+</table>
+<h2 id="where-the-product-links-live">Where the product links live</h2>
+<ul>
+<li>Cable hub: <a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">https://petronellatech.com/hardware/dgx-spark-cluster-cable/</a></li>
+<li>Ring kit and bundles: <a href="https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/">https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/</a></li>
+<li>Why 400G on the label and 200G on the link: <a href="https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/">https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/</a></li>
+<li>Our self-hosted LLM benchmarks, including the four-GB10 rows: <a href="https://petronellatech.com/ai/llm-benchmarks/">https://petronellatech.com/ai/llm-benchmarks/</a></li>
+</ul>
+<p>Prices at publication: single cable $159, 2-pack $299, 3-pack ring kit $435, free shipping
+inside the United States, United States addresses only.</p>
+<h2 id="about-us">About us</h2>
+<p>Petronella Technology Group, Inc. is a cybersecurity and compliance firm in Raleigh, North
+Carolina. We build and operate private AI infrastructure for clients who cannot send their
+data to a public model, and we run the same hardware ourselves. Craig Petronella (CMMC-RP,
+CCNA) leads the firm. Phone: 919-348-4912.</p>
+<h2 id="contributing-and-corrections">Contributing and corrections</h2>
+<p>If a number here disagrees with what you measure, open an issue with your command line and
+the raw output. We will re-run it. We do not accept numbers without a command line.</p>
+<h2 id="license">License</h2>
+<p>CC BY 4.0. See <a href="https://github.com/capetron/gb10-cluster-guide/blob/main/LICENSE">LICENSE</a>. Attribution: "Petronella Technology Group, Inc.,
+Clustering NVIDIA GB10 workstations, <a href="https://petronellatech.com">https://petronellatech.com</a>".</p>
+</article>
+<p class="src"><a href="https://github.com/capetron/gb10-cluster-guide/blob/main/README.md">View or correct this page on GitHub</a></p>
+</main>
+</div>
+<footer>
+<p>Maintained by <a href="https://petronellatech.com/">Petronella Technology Group, Inc.</a>. Text licensed
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Source: <a href="https://github.com/capetron/gb10-cluster-guide">github.com/capetron/gb10-cluster-guide</a>.</p>
+</footer>
+</body>
+</html>

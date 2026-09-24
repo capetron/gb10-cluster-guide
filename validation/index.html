@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validate a DGX Spark Cluster Fabric: ib_write_bw and iperf3</title>
+<meta name="description" content="How to prove a GB10 cluster fabric runs at line rate: ib_write_bw and iperf3 commands, measured results, and what packet_seq_err means.">
+<link rel="canonical" href="https://capetron.github.io/gb10-cluster-guide/validation/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GB10 Cluster Guide">
+<meta property="og:title" content="Validate a DGX Spark Cluster Fabric: ib_write_bw and iperf3">
+<meta property="og:description" content="How to prove a GB10 cluster fabric runs at line rate: ib_write_bw and iperf3 commands, measured results, and what packet_seq_err means.">
+<meta property="og:url" content="https://capetron.github.io/gb10-cluster-guide/validation/">
+<meta property="og:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
+<meta property="og:locale" content="en_US">
+<meta property="article:modified_time" content="2026-09-05">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Validate a DGX Spark Cluster Fabric: ib_write_bw and iperf3">
+<meta name="twitter:description" content="How to prove a GB10 cluster fabric runs at line rate: ib_write_bw and iperf3 commands, measured results, and what packet_seq_err means.">
+<meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Validate a DGX Spark Cluster Fabric: ib_write_bw and iperf3", "description": "How to prove a GB10 cluster fabric runs at line rate: ib_write_bw and iperf3 commands, measured results, and what packet_seq_err means.", "url": "https://capetron.github.io/gb10-cluster-guide/validation/", "dateModified": "2026-09-05", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+</head>
+<body>
+<header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
+<span class="tag">DGX Spark and every GB10 workstation</span></header>
+<div class="wrap">
+<nav class="side" aria-label="Guide sections"><ol><li><a href="../">Overview</a></li><li><a href="../hardware/">Hardware</a></li><li><a href="../two-and-three-nodes/">Two and three nodes</a></li><li><a href="../switched-fabric/">Switched fabric</a></li><li><a href="../validation/" aria-current="page">Validation</a></li><li><a href="../serving-models/">Serving models</a></li><li><a href="../bill-of-materials/">Bill of materials</a></li><li><a href="../faq/">FAQ</a></li><li><a href="../parts-and-where-to-buy/">Parts and where to buy</a></li><li><a href="../sanitization-notes/">Sanitization notes</a></li></ol></nav>
+<main>
+<article>
+<h1 id="04-validation-proving-the-fabric-runs-at-line-rate">04. Validation: proving the fabric runs at line rate</h1>
+<p><strong>Summary.</strong> Before any model touches the fabric, measure it with RDMA tools, one PCIe
+half at a time and then both, one pair at a time and then all pairs concurrently. This
+document is the matrix we ran on six GB10 workstations across two switches: intra-switch
+pairs, a single cross-switch flow over the 200G inter-switch link, two same-direction
+flows sharing the ISL, and a bidirectional ISL load with all six nodes busy. The headline
+results: 196 Gb/s per node through the switch ASIC with both halves active, 109 Gb/s
+per half through the switch (against 111.86 Gb/s on a direct cable), no measurable ISL
+penalty for a single cross-switch flow, a fair 82 + 82 Gb/s split when two 100G senders
+share one ISL direction, and 327 Gb/s aggregate with three concurrent pairs including a
+bidirectional ISL. It also explains why a single TCP stream is the wrong tool, how to
+find the right GID index, why a background <code>ib_write_bw</code> server dies with your SSH
+session, and what the <code>packet_seq_err</code> counter is telling you.</p>
+<h2 id="the-tools-and-why">The tools and why</h2>
+<ul>
+<li><strong><code>ib_write_bw</code></strong> (from the <code>perftest</code> package) drives RDMA writes between two hosts and
+  reports the wire rate. It exercises the same path NCCL uses. It is the authority.</li>
+<li><strong><code>iperf3</code></strong> measures TCP. On the GB10's ARM cores a single TCP stream sits near 12 Gb/s
+  regardless of the link, so a single-stream iperf3 number tells you about the CPU, not
+  the fabric. We report iperf3 only as a sanity check next to the RDMA figure.</li>
+<li><strong><code>ping -M do -s 8972</code></strong> proves MTU 9000 end to end and is the fastest way to spot a
+  detour through a 1500-byte path.</li>
+<li><strong>NIC counters</strong> (<code>ethtool -S</code>, and the RDMA hardware counters under
+  <code>/sys/class/infiniband/&lt;hca&gt;/ports/1/hw_counters/</code>) tell you whether loss is happening.</li>
+</ul>
+<h2 id="finding-the-rdma-device-and-gid-index">Finding the RDMA device and GID index</h2>
+<p>Each QSFP port has two RDMA devices, one per PCIe half (<code>rocep1s0f0</code> and <code>roceP2p1s0f0</code>
+for Port 0). RoCE v2 needs a GID index that maps to the IPv4 address on that half, and
+<strong>GID indices are not stable across nodes or ports</strong>. Never hard-code one. Look it up:</p>
+<pre><code>hca=rocep1s0f0
+for i in /sys/class/infiniband/$hca/ports/1/gids/*; do
+  idx=${i##*/}
+  echo &quot;$idx $(cat $i) $(cat /sys/class/infiniband/$hca/ports/1/gid_attrs/types/$idx 2&gt;/dev/null)&quot;
+done
+</code></pre>
+<p>Pick the entry whose type is RoCE v2 and whose GID ends in the IPv4 address you assigned
+to that half (the last four bytes of an IPv4-mapped GID are the address). On our units it
+was index 3 on every half, and the launchers in <a href="../serving-models/">05-serving-models.md</a>
+use <code>NCCL_IB_GID_INDEX=3</code>, but verify on yours.</p>
+<h2 id="running-a-measurement">Running a measurement</h2>
+<p>Server side (on the receiving node). Run it detached, or it dies with your SSH session and
+the client reports "Couldn't connect", which looks exactly like a firewall problem and is
+not:</p>
+<pre><code>ssh gb10-02 'sh -c &quot;nohup ib_write_bw -d rocep1s0f0 -x 3 -F -D 6 -s 65536 --report_gbits &lt;/dev/null &gt;/tmp/ibw.log 2&gt;&amp;1 &amp;&quot;'
+</code></pre>
+<p>Client side:</p>
+<pre><code>ib_write_bw -d rocep1s0f0 -x 3 -F -D 6 -s 65536 --report_gbits 198.51.100.2
+</code></pre>
+<p>Flags: <code>-d</code> RDMA device, <code>-x</code> GID index, <code>-F</code> ignore CPU frequency warnings, <code>-D</code>
+duration in seconds, <code>-s</code> message size in bytes, <code>--report_gbits</code> print Gb/s. The 65,536
+byte, 6 second run is what our six-node matrix used. Our earlier direct-attach runs used
+<code>-q 8 -s 1048576 -D 10</code> (eight queue pairs, 1 MiB messages, ten seconds); both give the
+same wire rate on a healthy link.</p>
+<p>For the both-halves number, run two client/server pairs at once, one on <code>rocep1s0f0</code>
+against the half-A address and one on <code>roceP2p1s0f0</code> against the half-B address, and add
+the two results.</p>
+<p>For the concurrent matrix, start every server first, then launch every client in the
+same second from a script, then collect. A helper that polls for a done marker in the
+logs must delete the old logs first or it will read the previous run.</p>
+<h2 id="baselines-direct-cable">Baselines: direct cable</h2>
+<p>Two units, one 0.5 m QSFP112 DAC, no switch:</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One half, <code>ib_write_bw</code></td>
+<td>111.86 Gb/s</td>
+</tr>
+<tr>
+<td>Both halves concurrently</td>
+<td>98.04 + 98.04 = 196.08 Gb/s (98 percent of line rate)</td>
+</tr>
+<tr>
+<td>One half on a firmware power-throttled NIC (before OS and firmware update)</td>
+<td>12.74 Gb/s</td>
+</tr>
+</tbody>
+</table>
+<p>The throttled unit showed 200G, RS-FEC, PCIe Gen5 x4 and a clean <code>mstlink</code> while
+delivering 12.74 Gb/s. Only this measurement revealed it. Re-run after any rebuild.</p>
+<h2 id="through-one-switch">Through one switch</h2>
+<p>Four MSI units on the first switch, measured between the two units on <strong>different</strong> DD
+ports so the traffic crosses the switch ASIC rather than staying inside one breakout:</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Both halves, <code>ib_write_bw</code>, 65,536 B, 6 s</td>
+<td>98.0 + 98.0 = 196 Gb/s</td>
+</tr>
+<tr>
+<td>iperf3 TCP on both halves</td>
+<td>93.1 + 92.6 Gb/s</td>
+</tr>
+</tbody>
+</table>
+<p>No PFC, no ECN. Two DGX Spark units on the second switch, one half:</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ib_write_bw</code> through switch B</td>
+<td>109.11 Gb/s (direct-attach baseline 111.86)</td>
+</tr>
+<tr>
+<td>Jumbo ping both planes</td>
+<td>clean</td>
+</tr>
+</tbody>
+</table>
+<p>The switch costs about 0.75 Gb/s per half, 0.7 percent. That is the whole penalty.</p>
+<h2 id="the-six-node-matrix-all-six-concurrent-where-stated">The six-node matrix (all six concurrent where stated)</h2>
+<p>All runs: <code>ib_write_bw</code>, 65,536 byte messages, <code>--report_gbits</code>, one half per pair. Pairs
+are listed as client to server. A four-node tensor-parallel serving run was live on the
+first switch's units throughout and survived every round.</p>
+<table>
+<thead>
+<tr>
+<th>Round</th>
+<th>Pairs</th>
+<th>Result, Gb/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1, intra-switch, three pairs</td>
+<td>gb10-01 to gb10-02; gb10-03 to gb10-04; gb10-05 to gb10-06</td>
+<td>109.31 + 109.22 + 109.27 = <strong>327.8 aggregate</strong></td>
+</tr>
+<tr>
+<td>R2a, one cross-switch flow over the ISL</td>
+<td>gb10-05 to gb10-01</td>
+<td><strong>109.08</strong> (no measurable ISL penalty)</td>
+</tr>
+<tr>
+<td>R2b, two cross-switch flows in the same direction, plus one intra</td>
+<td>gb10-05 to gb10-01; gb10-06 to gb10-02; gb10-03 to gb10-04</td>
+<td><strong>81.92 + 81.90</strong> (163.8 on the 200G ISL, fair split) + 109.13 intra</td>
+</tr>
+<tr>
+<td>R3, bidirectional ISL, plus one intra</td>
+<td>gb10-05 to gb10-01; gb10-02 to gb10-06; gb10-03 to gb10-04</td>
+<td>109.19 + 109.10 + 109.14 = <strong>327.4 aggregate</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Reading the rows:</p>
+<ul>
+<li><strong>R1</strong> says the two pods are indistinguishable. A DGX Spark pair and an MSI pair land
+  within 0.1 Gb/s of each other.</li>
+<li><strong>R2a</strong> says the ISL costs nothing for one flow. 109.08 through two switches and a
+  200G DAC versus 109.31 through one switch.</li>
+<li><strong>R2b</strong> is the only oversubscribed case: two 100G senders into one 200G ISL direction
+  is 200 into 200 with no headroom, and each half only ever delivers about 109. The ISL
+  split them almost perfectly evenly at 81.9 each, 163.8 total, with no PFC configured.
+  DCQCN (the RoCE congestion control in the NIC, driven by ECN marks and congestion
+  notification packets) handled it. This is also the only round where <code>packet_seq_err</code>
+  grew, by about 5,500 over the run.</li>
+<li><strong>R3</strong> says the ISL is full duplex. One flow in each direction plus an intra-switch pair
+  gives the same 327 Gb/s aggregate as three intra-switch pairs.</li>
+</ul>
+<p>Before the RSTP fix in <a href="../switched-fabric/">03-switched-fabric.md</a>, the R2a path
+measured 4.47 Gb/s. We first attributed it to contention (the four MSI units were loading
+a model at the time), and the idle re-test above shows the real path. If you see a
+cross-switch number in the single digits, check the ISL's RSTP role before checking
+anything else.</p>
+<h2 id="what-packet_seq_err-means">What <code>packet_seq_err</code> means</h2>
+<p><code>packet_seq_err</code> is a ConnectX hardware counter (under the RDMA device's <code>hw_counters</code>)
+that increments when the NIC receives a RoCE packet whose packet sequence number is not
+the one it expected. On a lossless-by-assumption RDMA transport that means a packet was
+lost or reordered in flight and the responder is asking for a retransmit. Two very
+different situations produce it:</p>
+<ol>
+<li><strong>Oversubscription with congestion control working.</strong> R2b above: two 100G senders
+   into one 200G direction. The switch marks or drops under pressure, the NICs send
+   congestion notification packets, DCQCN backs the senders off, and the counter grows
+   by a few thousand while throughput settles at a fair split. Throughput is fine. The
+   counter is telling you the ISL is at capacity, which you already knew.</li>
+<li><strong>A path that is dropping most of what it is given.</strong> The second-bridge trap in
+   <a href="../switched-fabric/">03-switched-fabric.md</a>: the switch CPU could forward a few
+   Gb/s and dropped the rest. The counter grew, CNPs flew, and throughput collapsed
+   from 196 to under 5 Gb/s. The counter is telling you the path is broken.</li>
+</ol>
+<p>Tell them apart by throughput: if <code>ib_write_bw</code> reports near line rate, the errors are
+congestion feedback and DCQCN is doing its job; if it reports single digits with the
+same counter growing, something in the path is software-forwarding, mis-negotiated, or
+running at MTU 1500. Under no circumstances does a healthy, unloaded pair grow this
+counter; R1, R2a and R3 grew it by zero.</p>
+<p>If you run many cross-switch senders routinely, PFC and ECN on the ISL are the next
+knobs. We have not needed them.</p>
+<h2 id="confirming-the-model-is-actually-using-the-fabric">Confirming the model is actually using the fabric</h2>
+<p>After a serving run, read the byte counters on the RDMA device and compare to before.
+During a four-node GLM-5.3-Flash run, 17 GB crossed <code>rocep1s0f0</code> on the head node;
+during a two-node Qwen3.8-Flash-Next run, 11 GB. If the counter did not move, NCCL fell
+back to sockets over the management network and every result you collected is a
+management-LAN result (see the 539 versus 1,963 tok/s comparison in
+<a href="../two-and-three-nodes/">02-two-and-three-nodes.md</a>).</p>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>Our measurement logs: 2026-08-15 (direct-attach 111.86 and 196.08 Gb/s, 12.74 Gb/s throttle, <code>-q 8 -s 1048576 -D 10</code> flags, GID index lookup path, single-stream TCP near 12 Gb/s), 2026-08-28 (196 Gb/s through the switch ASIC, iperf3 93.1 + 92.6, 65,536 B / 6 s flags, 17 GB and 11 GB RDMA byte counts), 2026-08-31 (109.11 DGX Spark pair, six-node matrix R1 to R3, packet_seq_err growth of about 5,500 in R2b, 4.47 Gb/s before the RSTP fix, second-bridge collapse to 4.85 / 4.9 / 8.8 Gb/s, detached <code>ib_write_bw</code> server gotcha)</li>
+<li><code>perftest</code> (ib_write_bw) documentation for flag meanings: <a href="https://github.com/linux-rdma/perftest">https://github.com/linux-rdma/perftest</a></li>
+<li>NVIDIA DGX Spark User Guide, ConnectX-7 Networking (RDMA device names): <a href="https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html">https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html</a></li>
+</ul>
+</article>
+<p class="src"><a href="https://github.com/capetron/gb10-cluster-guide/blob/main/docs/04-validation.md">View or correct this page on GitHub</a></p>
+</main>
+</div>
+<footer>
+<p>Maintained by <a href="https://petronellatech.com/">Petronella Technology Group, Inc.</a>. Text licensed
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Source: <a href="https://github.com/capetron/gb10-cluster-guide">github.com/capetron/gb10-cluster-guide</a>.</p>
+</footer>
+</body>
+</html>

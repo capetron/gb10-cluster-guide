@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connect Two or Three DGX Sparks: Cable and Ring Wiring</title>
+<meta name="description" content="Wire two GB10 units with one QSFP112 cable or three in NVIDIA&#x27;s ring (Node 1 Port 0 to Node 2 Port 1), with addressing, MTU 9000 and link checks.">
+<link rel="canonical" href="https://capetron.github.io/gb10-cluster-guide/two-and-three-nodes/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GB10 Cluster Guide">
+<meta property="og:title" content="Connect Two or Three DGX Sparks: Cable and Ring Wiring">
+<meta property="og:description" content="Wire two GB10 units with one QSFP112 cable or three in NVIDIA&#x27;s ring (Node 1 Port 0 to Node 2 Port 1), with addressing, MTU 9000 and link checks.">
+<meta property="og:url" content="https://capetron.github.io/gb10-cluster-guide/two-and-three-nodes/">
+<meta property="og:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
+<meta property="og:locale" content="en_US">
+<meta property="article:modified_time" content="2026-09-05">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Connect Two or Three DGX Sparks: Cable and Ring Wiring">
+<meta name="twitter:description" content="Wire two GB10 units with one QSFP112 cable or three in NVIDIA&#x27;s ring (Node 1 Port 0 to Node 2 Port 1), with addressing, MTU 9000 and link checks.">
+<meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Connect Two or Three DGX Sparks: Cable and Ring Wiring", "description": "Wire two GB10 units with one QSFP112 cable or three in NVIDIA's ring (Node 1 Port 0 to Node 2 Port 1), with addressing, MTU 9000 and link checks.", "url": "https://capetron.github.io/gb10-cluster-guide/two-and-three-nodes/", "dateModified": "2026-09-05", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+</head>
+<body>
+<header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
+<span class="tag">DGX Spark and every GB10 workstation</span></header>
+<div class="wrap">
+<nav class="side" aria-label="Guide sections"><ol><li><a href="../">Overview</a></li><li><a href="../hardware/">Hardware</a></li><li><a href="../two-and-three-nodes/" aria-current="page">Two and three nodes</a></li><li><a href="../switched-fabric/">Switched fabric</a></li><li><a href="../validation/">Validation</a></li><li><a href="../serving-models/">Serving models</a></li><li><a href="../bill-of-materials/">Bill of materials</a></li><li><a href="../faq/">FAQ</a></li><li><a href="../parts-and-where-to-buy/">Parts and where to buy</a></li><li><a href="../sanitization-notes/">Sanitization notes</a></li></ol></nav>
+<main>
+<article>
+<h1 id="02-two-nodes-and-three-nodes-the-switchless-configurations">02. Two nodes and three nodes: the switchless configurations</h1>
+<p><strong>Summary.</strong> NVIDIA supports two switchless topologies for GB10 workstations: two units
+joined by one QSFP cable, and three units joined by three cables in a ring, each unit
+using both of its QSFP ports. Both are covered by official NVIDIA playbooks and both are
+what the cluster cable was made for. Three is the switchless ceiling because each unit
+has exactly two ports; a fourth unit needs a switch (see <a href="../switched-fabric/">03-switched-fabric.md</a>).
+This document covers the physical connection, addressing that survives reboots, jumbo
+frames, how to prove the link is healthy before you start a model, and why bonding the
+two PCIe halves of a port does not do what people expect.</p>
+<h2 id="two-units-one-cable">Two units: one cable</h2>
+<p>NVIDIA's "Connect Two Sparks" playbook describes "high-speed inter-node communication
+using 200GbE direct QSFP connections" with one QSFP cable. Prerequisites from the
+playbook: two systems, SSH access to both, root or sudo on both, the same username on
+both, key-based SSH between them with no interactive prompt. NVIDIA rates it at one hour including validation,
+medium risk, and reversible by removing the netplan configuration. NVIDIA also ships a
+<code>discover-sparks.sh</code> script for node discovery and SSH key distribution, and a Sync
+Cluster Assistant that does discovery, validation and SSH setup automatically.</p>
+<p>Physically: one cable from Port 0 on the first unit to Port 0 on the second. Port 0 is
+the left QSFP port, nearest the RJ45 jack. Which port you pick does not matter for
+bandwidth; it matters for consistency in the interface names below.</p>
+<p>What you get from one cable: one 200 Gb/s link made of two 100 Gb/s PCIe halves. Every
+procedure below configures both halves. If you configure only <code>enp1s0f0np0</code> you will
+measure about 111 Gb/s and wonder where the other half went.</p>
+<p>Cable: <a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">https://petronellatech.com/hardware/dgx-spark-cluster-cable/</a></p>
+<h2 id="three-units-a-ring-of-three-cables">Three units: a ring of three cables</h2>
+<p>NVIDIA's "Connect Three DGX Spark in a Ring Topology" playbook uses "three QSFP cables
+for direct 200GbE connection" between three systems. Each unit uses both of its QSFP
+ports, and every cable joins a Port 0 to a Port 1, exactly as the playbook wires it:</p>
+<table>
+<thead>
+<tr>
+<th>Cable</th>
+<th>From</th>
+<th>To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Node 1, Port 0</td>
+<td>Node 2, Port 1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Node 2, Port 0</td>
+<td>Node 3, Port 1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Node 3, Port 0</td>
+<td>Node 1, Port 1</td>
+</tr>
+</tbody>
+</table>
+<p>Port 0 is the QSFP cage next to the RJ45 jack; Port 1 is the one further away. The
+mapping matters because the playbook's netplan files put the matching subnet on each
+Port 0 / Port 1 pair. Wire Port 0 to Port 0 and every interface still shows link up, but
+the two ends of that cable sit in different subnets and ping fails. Every unit has a
+direct link to every other unit, so this is a full mesh, not a bus. Prerequisites match
+the two-node playbook plus current OS and firmware on all three.</p>
+<p>This is the switchless ceiling. With two ports per unit, a fourth unit cannot reach every
+other unit directly; you can wire four units as four point-to-point links, but then two
+of the units have no direct path to each other. We built exactly that with four units and
+/30 links before we bought the switch and confirmed there was no route between the two
+non-adjacent units. All-to-all over four needs three links per node, and the hardware has
+two. Four or more means a switch.</p>
+<p>Three cables: <a href="https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/">https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/</a></p>
+<h2 id="addressing">Addressing</h2>
+<p>Two schemes work. Both use the same rule: <strong>one subnet per PCIe half, and never a default
+route on the fabric interfaces.</strong></p>
+<h3 id="point-to-point-30s-two-nodes-or-the-three-node-ring">Point-to-point /30s (two nodes, or the three-node ring)</h3>
+<p>Give each cable its own /30 for the first half and a second /30 for the second half. The
+scheme we used put the second half ten higher in the third octet, so it is obvious at a
+glance which half you are looking at:</p>
+<table>
+<thead>
+<tr>
+<th>Link</th>
+<th>First half (<code>enp1s0fXnpX</code>)</th>
+<th>Second half (<code>enP2p1s0fXnpX</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gb10-01 to gb10-02</td>
+<td>198.51.100.0/30</td>
+<td>203.0.113.0/30</td>
+</tr>
+<tr>
+<td>gb10-01 to gb10-03</td>
+<td>198.51.100.4/30</td>
+<td>203.0.113.4/30</td>
+</tr>
+<tr>
+<td>gb10-02 to gb10-03</td>
+<td>198.51.100.8/30</td>
+<td>203.0.113.8/30</td>
+</tr>
+</tbody>
+</table>
+<p>(198.51.100.0/24 and 203.0.113.0/24 are RFC 5737 documentation ranges; substitute your own
+private ranges.)</p>
+<h3 id="flat-planes-what-we-moved-to-for-the-switch-and-what-we-would-use-again-for-three">Flat planes (what we moved to for the switch, and what we would use again for three)</h3>
+<p>One /24 per half, one host number per unit. Half A of every unit is <code>198.51.100.N/24</code>,
+half B is <code>203.0.113.N/24</code>, and N is the unit number. This is the scheme we run on the
+switched fabric and it is simpler to reason about than /30s even without a switch; it
+also means the addressing does not change when you add the switch later.</p>
+<h3 id="making-it-persist">Making it persist</h3>
+<p>This is where most of our early time went. Fabric addresses that live only in a running
+kernel do not survive a reboot, and a unit that reboots into the wrong address on the
+wrong link is the third most common fault we hit. Two mechanisms, depending on the
+vendor:</p>
+<p><strong>DGX Spark Founders Edition (netplan, systemd-networkd).</strong> Drop a file such as
+<code>/etc/netplan/40-cx7.yaml</code>:</p>
+<pre><code class="language-yaml">network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp1s0f0np0:
+      addresses: [198.51.100.5/24]
+      mtu: 9000
+      link-local: []
+      dhcp4: false
+      dhcp6: false
+    enP2p1s0f0np0:
+      addresses: [203.0.113.5/24]
+      mtu: 9000
+      link-local: []
+      dhcp4: false
+      dhcp6: false
+</code></pre>
+<p><code>netplan apply</code> did not drop our management SSH session. Remove any older netplan
+fragments that still assign the old direct-attach addresses to the same interfaces, and
+back the directory up first. On the DGX Spark the fabric NICs show as <code>unmanaged</code> in
+NetworkManager, which is correct: networkd owns them.</p>
+<p><strong>MSI EdgeXpert (NetworkManager).</strong> One profile per half, IPv6 off, never a default
+route, MTU 9000:</p>
+<pre><code>nmcli con add type ethernet ifname enp1s0f0np0 con-name fabric-a \
+  ipv4.method manual ipv4.addresses 198.51.100.1/24 ipv4.never-default yes \
+  ipv6.method disabled 802-3-ethernet.mtu 9000
+nmcli con add type ethernet ifname enP2p1s0f0np0 con-name fabric-b \
+  ipv4.method manual ipv4.addresses 203.0.113.1/24 ipv4.never-default yes \
+  ipv6.method disabled 802-3-ethernet.mtu 9000
+</code></pre>
+<p>Then the trap that cost us a launch: <strong>an old profile that is carrier-down can still hold
+an address and still own a route.</strong> When we retired a direct-attach bond, the bond
+interface with no carrier kept its old /30 and the kernel routed the first four addresses
+of the new /24 into it. Ping to the fifth address worked; ping to the second and third
+failed. <code>nmcli con down &lt;old-profile&gt;</code> fixed it; setting the old profiles to
+<code>autoconnect no</code> keeps it fixed. Audit with <code>ip route</code> after every change; every fabric
+route should point at a fabric interface with carrier.</p>
+<h2 id="mtu-9000">MTU 9000</h2>
+<p>Set <code>mtu 9000</code> on every fabric interface on every unit. There is no negotiation to save
+you: a 1500-byte interface on one end of a 9000-byte link silently fragments or drops
+large frames and NCCL bootstraps then stalls. Verify with a jumbo ping that forbids
+fragmentation:</p>
+<pre><code>ping -M do -s 8972 -c 3 198.51.100.2
+</code></pre>
+<p>8972 is 9000 minus the 20-byte IP header and 8-byte ICMP header. A clean reply from every
+unit on both planes means MTU is right end to end. When a unit later joins a switch, the
+same ping proves the switch path too (see <a href="../switched-fabric/">03-switched-fabric.md</a>
+for the switch-side l2mtu that must also be set).</p>
+<h2 id="link-checks-before-you-start-a-model">Link checks before you start a model</h2>
+<p>Run these in order. Each one rules out a class of fault the next one would misreport.</p>
+<ol>
+<li><strong>Link state and speed.</strong> On each unit, <code>ethtool enp1s0f0np0 | grep -E 'Speed|Link'</code>
+   should show 200000Mb/s and Link detected: yes on both halves. This proves the cable
+   and the NIC negotiated. It does not prove throughput (see item 4).</li>
+<li><strong>Addresses and routes.</strong> <code>ip -br addr show enp1s0f0np0 enP2p1s0f0np0</code> and <code>ip route</code>.
+   Two addresses, two routes, no default route on either, no stale routes into interfaces
+   without carrier.</li>
+<li><strong>Jumbo ping on both planes</strong>, as above.</li>
+<li><strong>RDMA bandwidth, one half at a time, then both.</strong> This is the only test that catches
+   a power-throttled NIC or a CPU-forwarded path. Full commands and expected numbers are
+   in <a href="../validation/">04-validation.md</a>. Expect about 111 Gb/s per half on a direct
+   cable and about 196 Gb/s with both halves running concurrently. If a half reads
+   12 to 13 Gb/s with everything else green, update the OS and firmware and reboot before
+   doing anything else.</li>
+<li><strong>Peer firewall.</strong> If a host firewall is on, multi-node vLLM needs full peer
+   connectivity, not just the rendezvous port: the collective bootstrap opens dynamic
+   ports and the head node also connects to its own address. Allow both fabric subnets
+   from every peer, including the unit itself.</li>
+<li><strong>Same container image digest everywhere.</strong> Two units pulling "the same" nightly tag
+   on different days got different NCCL builds, and the symptom was a bootstrap warning
+   about a message truncated by four bytes that looked exactly like a network fault. Pin
+   the digest.</li>
+</ol>
+<h2 id="what-a-bond-does-not-give-you">What a bond does not give you</h2>
+<p>People bond the two halves of a port because two interfaces on one wire look like a
+classic active-active pair. Three things to know before you do:</p>
+<ol>
+<li><strong>RDMA bypasses the bond.</strong> NCCL and <code>ib_write_bw</code> talk to the RDMA devices
+   (<code>rocep1s0f0</code>, <code>roceP2p1s0f0</code>), not to the bonded Ethernet interface. NCCL uses both
+   halves on its own when you list both in <code>NCCL_IB_HCA</code>. A bond adds nothing to the path
+   that carries the model's traffic.</li>
+<li><strong>TCP does not fill even one half.</strong> A single TCP stream on the GB10's ARM cores sits
+   near 12 Gb/s. Bonding two halves does not make one stream faster; at best it lets many
+   streams spread. If you need TCP throughput for weight distribution, use many parallel
+   streams (we fan out weights with <code>tar | ssh</code> at about 830 MB/s over the fabric, which
+   is a single stream with a large block size and works well enough).</li>
+<li><strong>The bond is the thing that keeps stale state.</strong> Our carrier-down bond holding an old
+   address and a live route (above) is the direct consequence of having a bond at all.
+   Two plain interfaces with two plain addresses have no such failure mode.</li>
+</ol>
+<p>The one place the second half matters for plain IP is NCCL's socket bootstrap, which uses
+one Ethernet interface (<code>NCCL_SOCKET_IFNAME=enp1s0f0np0</code>). It only needs to exist and
+route; it does not need to be fast.</p>
+<h2 id="what-sharding-over-the-wrong-network-costs">What sharding over the wrong network costs</h2>
+<p>We measured this once so you do not have to. The same dense 27B FP8 model, same pinned
+image, same flags:</p>
+<table>
+<thead>
+<tr>
+<th>Configuration</th>
+<th>Prefill</th>
+<th>Decode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 unit, tensor parallel 1</td>
+<td>1,963 tok/s</td>
+<td>8.3 tok/s</td>
+</tr>
+<tr>
+<td>4 units, tensor parallel 4, over 10 Gb/s Ethernet</td>
+<td>539 tok/s</td>
+<td>3.5 tok/s</td>
+</tr>
+</tbody>
+</table>
+<p>Three extra units over the management LAN made prefill 3.6x slower and decode 2.4x
+slower. Tensor parallel is only worth running over the RDMA fabric at line rate, and only
+for models whose per-rank working set shrinks enough to pay for the collectives. The
+four-node results that do work are in <a href="../serving-models/">05-serving-models.md</a>.</p>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>NVIDIA, Connect Two Sparks: <a href="https://build.nvidia.com/spark/connect-two-sparks">https://build.nvidia.com/spark/connect-two-sparks</a>
+  (one QSFP cable, prerequisites, netplan, discover-sparks.sh, duration and risk)</li>
+<li>NVIDIA, Connect Three DGX Spark in a Ring Topology: <a href="https://build.nvidia.com/spark/connect-three-sparks">https://build.nvidia.com/spark/connect-three-sparks</a>
+  (three QSFP cables, ring, prerequisites)</li>
+<li>NVIDIA DGX Spark User Guide, ConnectX-7 Networking: <a href="https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html">https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html</a>
+  (direct cable up to 3 systems, switch for 4, interface names, Sync Cluster Assistant)</li>
+<li>Petronella Technology Group, Inc., cable product page (three-node ring FAQ):
+  <a href="https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/">https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/</a></li>
+<li>Our notes, 2026-08-15 (four-unit /30 ring with no route between non-adjacent units; 1,963 / 8.3 versus 539 / 3.5 tok/s; 12 Gb/s single-stream TCP; digest drift; host firewall full-mesh requirement), 2026-08-28 (NetworkManager profiles, carrier-down bond trap, MTU 9000, jumbo ping 8972), 2026-08-31 (DGX Spark netplan file, networkd renderer, unmanaged in NetworkManager)</li>
+</ul>
+</article>
+<p class="src"><a href="https://github.com/capetron/gb10-cluster-guide/blob/main/docs/02-two-and-three-nodes.md">View or correct this page on GitHub</a></p>
+</main>
+</div>
+<footer>
+<p>Maintained by <a href="https://petronellatech.com/">Petronella Technology Group, Inc.</a>. Text licensed
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Source: <a href="https://github.com/capetron/gb10-cluster-guide">github.com/capetron/gb10-cluster-guide</a>.</p>
+</footer>
+</body>
+</html>

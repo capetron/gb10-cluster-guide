@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sanitization Notes for the GB10 Cluster Guide</title>
+<meta name="description" content="What was generalized from our production notes to publish this GB10 cluster guide: addressing, hostnames and other internal details.">
+<link rel="canonical" href="https://capetron.github.io/gb10-cluster-guide/sanitization-notes/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GB10 Cluster Guide">
+<meta property="og:title" content="Sanitization Notes for the GB10 Cluster Guide">
+<meta property="og:description" content="What was generalized from our production notes to publish this GB10 cluster guide: addressing, hostnames and other internal details.">
+<meta property="og:url" content="https://capetron.github.io/gb10-cluster-guide/sanitization-notes/">
+<meta property="og:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
+<meta property="og:locale" content="en_US">
+<meta property="article:modified_time" content="2026-09-05">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sanitization Notes for the GB10 Cluster Guide">
+<meta name="twitter:description" content="What was generalized from our production notes to publish this GB10 cluster guide: addressing, hostnames and other internal details.">
+<meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Sanitization Notes for the GB10 Cluster Guide", "description": "What was generalized from our production notes to publish this GB10 cluster guide: addressing, hostnames and other internal details.", "url": "https://capetron.github.io/gb10-cluster-guide/sanitization-notes/", "dateModified": "2026-09-05", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+</head>
+<body>
+<header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
+<span class="tag">DGX Spark and every GB10 workstation</span></header>
+<div class="wrap">
+<nav class="side" aria-label="Guide sections"><ol><li><a href="../">Overview</a></li><li><a href="../hardware/">Hardware</a></li><li><a href="../two-and-three-nodes/">Two and three nodes</a></li><li><a href="../switched-fabric/">Switched fabric</a></li><li><a href="../validation/">Validation</a></li><li><a href="../serving-models/">Serving models</a></li><li><a href="../bill-of-materials/">Bill of materials</a></li><li><a href="../faq/">FAQ</a></li><li><a href="../parts-and-where-to-buy/">Parts and where to buy</a></li><li><a href="../sanitization-notes/" aria-current="page">Sanitization notes</a></li></ol></nav>
+<main>
+<article>
+<h1 id="sanitization-notes">Sanitization notes</h1>
+<p>This guide was written from Petronella Technology Group, Inc. internal build notes,
+session handoffs and benchmark logs. Before publication the following classes of
+detail were generalized. This file lists what was changed and how, so a reader knows
+which identifiers are placeholders; it deliberately does not contain any of the
+original values.</p>
+<h2 id="addressing">Addressing</h2>
+<ul>
+<li>All management-network addresses were replaced with the RFC 5737 documentation range
+  192.0.2.0/24 (switches at 192.0.2.11 and 192.0.2.12).</li>
+<li>The RDMA fabric's two planes (one per PCIe half of the ConnectX-7 port) were replaced
+  with 198.51.100.0/24 (plane A, half <code>enp1s0f0np0</code>) and 203.0.113.0/24 (plane B, half
+  <code>enP2p1s0f0np0</code>). Host numbers follow the node number.</li>
+<li>The point-to-point /30 links from the earlier direct-attach ring were re-expressed in
+  the same two documentation ranges.</li>
+<li>Overlay-network (mesh VPN) addresses that appeared in the source notes were removed;
+  they play no part in the fabric.</li>
+</ul>
+<h2 id="hostnames">Hostnames</h2>
+<ul>
+<li>The four MSI EdgeXpert MS-C931 units became <code>gb10-01</code> through <code>gb10-04</code>.</li>
+<li>The two NVIDIA DGX Spark Founders Edition units became <code>gb10-05</code> and <code>gb10-06</code>.</li>
+<li>The two switches became <code>crs812-a</code> (MSI pod) and <code>crs812-b</code> (DGX Spark pod).</li>
+<li>Every other host on our network that appeared in the source notes (workstations, other
+  GPU servers, storage, management VMs, the campus core switches) was removed or
+  replaced with a role description such as "the campus network" or "the management
+  switch". Their names, addresses, ports and VLANs are not needed to reproduce the
+  fabric.</li>
+</ul>
+<h2 id="switch-identifiers">Switch identifiers</h2>
+<ul>
+<li>Switch serial numbers, the switch MAC OUI, and the RouterOS login are omitted.</li>
+<li>References to the file that holds the switch credentials are omitted. The guide says
+  "credentials" where the notes named a file.</li>
+<li>Physical port numbers on our campus switches (which uplink, which patch) are omitted;
+  the RSTP discussion refers to "the campus uplink" and "an RJ45 patch".</li>
+<li>The campus network controller, the firewall, and their vendors, versions and addresses
+  are omitted.</li>
+</ul>
+<h2 id="container-images-and-repositories">Container images and repositories</h2>
+<ul>
+<li>Locally built image tags (the names we gave the patched vLLM builds) are omitted,
+  because they are not on any registry and would not resolve. The guide describes the
+  patch chain generically and credits the public GitHub repositories by name.</li>
+<li>One community-published Docker Hub image is referred to as "the image published by
+  the recipe author; see the repo" rather than by account name.</li>
+<li>Internal script names, launcher environment-variable interfaces, results-log paths and
+  memory-file names were replaced with the commands and flags they wrap.</li>
+</ul>
+<h2 id="people-clients-and-business-detail">People, clients and business detail</h2>
+<ul>
+<li>Fleet-wide credentials, the fact that some hosts share credentials, and which do not,
+  are omitted.</li>
+<li>Names of individuals other than the firm's principal are omitted, including a
+  colleague's launcher scripts and address expectations.</li>
+<li>No client or engagement detail existed in the source material for this topic; none
+  appears here. The firm's compliance work is described only in the "About us" paragraph
+  of the README.</li>
+<li>Purchase-decision discussion (which unit to buy next, inventory, margins, order
+  velocity, supplier costs) is omitted except for the list prices of GB10 units observed
+  in June 2026 and the breakout DAC price, both dated in the bill of materials.</li>
+<li>Operational incidents unrelated to the fabric (voice systems, chat bridges, unrelated
+  outages, download throttling on one site's uplink) are omitted; the last of these
+  survives only as the generic advice to pull images where bandwidth is good and fan
+  them out over the fabric.</li>
+</ul>
+<h2 id="what-was-not-changed">What was not changed</h2>
+<ul>
+<li>Every measured number (bandwidths, tokens per second, KV-cache sizes, boot times,
+  memory floors, counter deltas) is exactly as logged.</li>
+<li>Interface and RDMA device names (<code>enp1s0f0np0</code>, <code>enP2p1s0f0np0</code>, <code>rocep1s0f0</code>,
+  <code>roceP2p1s0f0</code>) are NVIDIA-documented and appear unchanged.</li>
+<li>RouterOS interface names (<code>qsfp56-dd-1-1</code>, <code>qsfp56-2-1</code>, <code>ether1</code>, <code>ether2</code>) are the
+  switch's own names and appear unchanged; which physical uplink is <code>ether1</code> versus
+  <code>ether2</code> on each switch is arbitrary and was kept for readability.</li>
+<li>Community repository names, Hugging Face checkpoint names, part numbers, product
+  prices and NVIDIA documentation URLs are unchanged.</li>
+</ul>
+<h2 id="grep-used-before-publication">Grep used before publication</h2>
+<p>The tree was searched for internal address prefixes, internal hostnames, switch serial
+prefixes, the switch MAC OUI, and the word for a login secret. The search returned no
+hits at commit time. Re-run it after any edit that pastes from internal notes.</p>
+</article>
+<p class="src"><a href="https://github.com/capetron/gb10-cluster-guide/blob/main/docs/SANITIZATION-NOTES.md">View or correct this page on GitHub</a></p>
+</main>
+</div>
+<footer>
+<p>Maintained by <a href="https://petronellatech.com/">Petronella Technology Group, Inc.</a>. Text licensed
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Source: <a href="https://github.com/capetron/gb10-cluster-guide">github.com/capetron/gb10-cluster-guide</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://capetron.github.io/gb10-cluster-guide/sitemap.xml

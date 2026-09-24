@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB10 ConnectX-7 Ports, Cables and Bandwidth Explained</title>
+<meta name="description" content="The GB10 ConnectX-7 port explained: two PCIe Gen 5 x4 halves per QSFP port, why the cable is 400G-rated but links at 200G, and 196 Gb/s measured.">
+<link rel="canonical" href="https://capetron.github.io/gb10-cluster-guide/hardware/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GB10 Cluster Guide">
+<meta property="og:title" content="GB10 ConnectX-7 Ports, Cables and Bandwidth Explained">
+<meta property="og:description" content="The GB10 ConnectX-7 port explained: two PCIe Gen 5 x4 halves per QSFP port, why the cable is 400G-rated but links at 200G, and 196 Gb/s measured.">
+<meta property="og:url" content="https://capetron.github.io/gb10-cluster-guide/hardware/">
+<meta property="og:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
+<meta property="og:locale" content="en_US">
+<meta property="article:modified_time" content="2026-09-05">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GB10 ConnectX-7 Ports, Cables and Bandwidth Explained">
+<meta name="twitter:description" content="The GB10 ConnectX-7 port explained: two PCIe Gen 5 x4 halves per QSFP port, why the cable is 400G-rated but links at 200G, and 196 Gb/s measured.">
+<meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "GB10 ConnectX-7 Ports, Cables and Bandwidth Explained", "description": "The GB10 ConnectX-7 port explained: two PCIe Gen 5 x4 halves per QSFP port, why the cable is 400G-rated but links at 200G, and 196 Gb/s measured.", "url": "https://capetron.github.io/gb10-cluster-guide/hardware/", "dateModified": "2026-09-05", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+</head>
+<body>
+<header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
+<span class="tag">DGX Spark and every GB10 workstation</span></header>
+<div class="wrap">
+<nav class="side" aria-label="Guide sections"><ol><li><a href="../">Overview</a></li><li><a href="../hardware/" aria-current="page">Hardware</a></li><li><a href="../two-and-three-nodes/">Two and three nodes</a></li><li><a href="../switched-fabric/">Switched fabric</a></li><li><a href="../validation/">Validation</a></li><li><a href="../serving-models/">Serving models</a></li><li><a href="../bill-of-materials/">Bill of materials</a></li><li><a href="../faq/">FAQ</a></li><li><a href="../parts-and-where-to-buy/">Parts and where to buy</a></li><li><a href="../sanitization-notes/">Sanitization notes</a></li></ol></nav>
+<main>
+<article>
+<h1 id="01-the-hardware-gb10-variants-the-connectx-7-port-and-the-cable">01. The hardware: GB10 variants, the ConnectX-7 port, and the cable</h1>
+<p><strong>Summary.</strong> Every GB10 workstation, regardless of the badge on the front, ships the same
+NVIDIA GB10 Grace Blackwell system-on-chip, 128 GB of unified LPDDR5x memory on a 256-bit
+bus at 4266 MHz delivering 273 GB/s, and a ConnectX-7 network controller exposed as two
+QSFP ports on the rear panel. NVIDIA documents each port at up to 200 Gb/s, and the reason
+is structural: the ConnectX-7 is fed by two independent PCIe Gen 5 x4 links, so each
+physical port appears in Linux as two network interfaces and two RDMA devices, each good
+for roughly 100 Gb/s. The approved direct-attach cable is a QSFP112 part rated for 400G;
+it negotiates at 200G on this NIC, and the extra rating is headroom, not speed you get.
+This document lists the variants we know of, explains the two-halves port model that every
+later document depends on, and puts the 25 GB/s link next to the 273 GB/s memory bus so
+the rest of the guide makes sense.</p>
+<h2 id="the-gb10-variants">The GB10 variants</h2>
+<p>All of these are GB10 Grace Blackwell systems with 2 x QSFP112 on a ConnectX-7 NIC. The
+cluster cable and every procedure in this guide apply to all of them. We have run four
+MSI units and two DGX Spark Founders Edition units side by side on the same switched
+fabric; a DGX Spark pair and an MSI pair measured within 0.1 Gb/s of each other through
+the switch (109.27 versus 109.31 Gb/s, see <a href="../validation/">04-validation.md</a>).</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Notes from our use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NVIDIA DGX Spark (Founders Edition)</td>
+<td>Ships with netplan (systemd-networkd) network configuration. Our two are on the second switch.</td>
+</tr>
+<tr>
+<td>MSI EdgeXpert MS-C931</td>
+<td>Ships with NetworkManager. Our four are on the first switch. No BMC; a physical power button is the only remote-power fallback, which drives the memory-guard advice in <a href="../serving-models/">05-serving-models.md</a>.</td>
+</tr>
+<tr>
+<td>ASUS Ascent GX10</td>
+<td>Same NIC and ports.</td>
+</tr>
+<tr>
+<td>Dell Pro Max with GB10</td>
+<td>Same NIC and ports.</td>
+</tr>
+<tr>
+<td>HP ZGX Nano G1n</td>
+<td>Same NIC and ports.</td>
+</tr>
+<tr>
+<td>Lenovo ThinkStation PGX</td>
+<td>Same NIC and ports.</td>
+</tr>
+<tr>
+<td>Acer Veriton GN100</td>
+<td>Same NIC and ports.</td>
+</tr>
+<tr>
+<td>Gigabyte AI TOP ATOM</td>
+<td>Same NIC and ports.</td>
+</tr>
+</tbody>
+</table>
+<p>Vendor-specific cable pages, if you want the one for your box:
+<a href="https://petronellatech.com/hardware/asus-gx10-cluster-cable/">ASUS GX10</a>,
+<a href="https://petronellatech.com/hardware/dell-pro-max-gb10-cluster-cable/">Dell Pro Max GB10</a>,
+<a href="https://petronellatech.com/hardware/msi-edgexpert-cluster-cable/">MSI EdgeXpert</a>,
+<a href="https://petronellatech.com/hardware/hp-zgx-nano-cluster-cable/">HP ZGX Nano</a>,
+<a href="https://petronellatech.com/hardware/lenovo-thinkstation-pgx-cluster-cable/">Lenovo ThinkStation PGX</a>,
+<a href="https://petronellatech.com/hardware/acer-veriton-gn100-cluster-cable/">Acer Veriton GN100</a>,
+<a href="https://petronellatech.com/hardware/gigabyte-ai-top-atom-cluster-cable/">Gigabyte AI TOP ATOM</a>.</p>
+<h2 id="the-connectx-7-port-as-linux-sees-it">The ConnectX-7 port, as Linux sees it</h2>
+<p>NVIDIA's DGX Spark user guide states the facts plainly and they govern everything else:</p>
+<ul>
+<li>Two QSFP ports per device, "up to 200 Gigabits per second (Gb/s)" each, Ethernet
+  configuration only. The left port (closest to the RJ45 port) is Port 0; the right
+  port is Port 1.</li>
+<li>The ConnectX-7 connects to the Grace Blackwell SoC over "two independent PCIe Gen 5 x4
+  links". Each QSFP port therefore maps to two PCIe addresses, in PCIe domain 0000 and
+  PCIe domain 0002.</li>
+<li>Each QSFP port produces four Linux interfaces. For Port 0: <code>enp1s0f0np0</code> and
+  <code>enP2p1s0f0np0</code> (Ethernet) plus <code>rocep1s0f0</code> and <code>roceP2p1s0f0</code> (RDMA). For Port 1:
+  <code>enp1s0f1np1</code>, <code>enP2p1s0f1np1</code>, <code>rocep1s0f1</code>, <code>roceP2p1s0f1</code>.</li>
+</ul>
+<p>The consequence is easy to state and easy to forget: <strong><code>enp1s0f0np0</code> and <code>enP2p1s0f0np0</code>
+are the same wire.</strong> They are two PCIe halves of one physical port. One half carries about
+100 Gb/s. To see 200 Gb/s on one cable you need traffic on both halves at once. NCCL does
+this on its own when you hand it both RDMA devices; a single TCP stream or a single
+<code>ib_write_bw</code> process does not.</p>
+<p>Our measurements on a direct cable between two units (see <a href="../validation/">04-validation.md</a>
+for the commands):</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>ib_write_bw, --report_gbits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One half (one RDMA device)</td>
+<td>111.86 Gb/s</td>
+</tr>
+<tr>
+<td>Both halves concurrently</td>
+<td>98.04 + 98.04 = 196.08 Gb/s</td>
+</tr>
+</tbody>
+</table>
+<p>That 196 Gb/s (about 24.5 GB/s) is 98 percent of the 200 Gb/s line rate. Field reports we have seen from
+other GB10 owners land at 185 to 190 Gb/s dual-port, in the same band.</p>
+<p>A related trap: because both halves share one wire, LLDP on the second half can look like
+a self-loop. It is not a wiring fault.</p>
+<h2 id="why-the-cable-says-400g-and-the-link-says-200g">Why the cable says 400G and the link says 200G</h2>
+<p>NVIDIA's approved cables for the DGX Spark QSFP ports are:</p>
+<ul>
+<li>Amphenol NJAAKK-N911 (QSFP to QSFP112, 32 AWG, 400 mm, LSZH)</li>
+<li>Amphenol NJAAKK0006 (the 0.5 m version)</li>
+<li>Luxshare LMTQF022-SD-R (QSFP112 400G DAC, 400 mm, 30 AWG)</li>
+</ul>
+<p>All three are QSFP112 passive direct-attach copper parts rated for 400G. The DGX Spark's
+ConnectX-7 negotiates them at 200 Gb/s, which is the port's documented ceiling. The 400G
+rating is the cable's capability, not the link's; the same cable on a 400G NIC would run at
+400G. On a GB10 it buys nothing beyond headroom and compatibility. It also means a
+"200G" cable is not required; what is required is a QSFP112 form factor that the NIC
+recognizes. The cable we sell is the NJAAKK0006 / LMTQF022-SD-R spec in 0.5 m, 32 AWG:
+<a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">https://petronellatech.com/hardware/dgx-spark-cluster-cable/</a> . A longer write-up of the
+bits-versus-bytes arithmetic is at
+<a href="https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/">https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/</a> .</p>
+<p>In practice the 0.5 m length covers side-by-side or stacked units. Separated by a monitor
+you want 1 m; across two shelves, 2 m; across a small rack, 3 m (active copper at that
+length).</p>
+<h2 id="273-gbs-inside-25-gbs-outside">273 GB/s inside, 25 GB/s outside</h2>
+<p>The GB10's unified memory delivers 273 GB/s. The interconnect, at 200 Gb/s, delivers
+25 GB/s before protocol overhead (200 divided by 8), and about 23 to 24 GB/s after it.
+So local memory is roughly eleven times faster than the fastest path to the next node.</p>
+<p>This single ratio explains most of what you will see in <a href="../serving-models/">05-serving-models.md</a>:</p>
+<ul>
+<li>Decode on a single GB10 is memory-bandwidth bound. On one unit we measured a dense
+  27B FP8 model at 8.3 tokens per second decode against 1,963 tokens per second prefill,
+  and the decode figure lands within 12 percent of the pure bandwidth prediction
+  (273 GB/s divided by 29 GB of weights is 9.4 tokens per second).</li>
+<li>Clustering is a capacity play, not a raw speed boost. A single unit runs models up to
+  roughly 200B parameters; two linked units run up to 405B. Tensor parallel across the
+  fabric adds memory and can add per-stream speed when the model is a mixture of experts
+  whose active parameters shrink per rank, but it does not turn 25 GB/s into 273 GB/s.</li>
+<li>The fabric is rarely the limiter once it is running at line rate. During a four-node
+  GLM-5.3-Flash run, 17 GB crossed the RDMA device; during a two-node Qwen3.8-Flash-Next
+  run, 11 GB. Those are collectives, not the bottleneck. When the fabric is not at line
+  rate (a throttled NIC, a CPU-forwarded bridge, a blocked ISL detouring over 2.5G
+  copper), it becomes the only thing that matters.</li>
+</ul>
+<h2 id="things-that-hide">Things that hide</h2>
+<p>Two faults we hit are invisible in every status output and only show in a bandwidth
+measurement:</p>
+<ol>
+<li><strong>A firmware power-throttled ConnectX-7.</strong> One of our units reported 12.74 Gb/s RDMA on a
+   link that showed 200G, RS-FEC, PCIe Gen5 x4, and "No issue was observed" in <code>mstlink</code>.
+   A full OS upgrade plus reboot took it to 111.86 Gb/s, an 8.8x change. The public
+   version of this story is the driver update from 580.142 to 580.159.03 that turned
+   13 Gb/s into 111.86 Gb/s. Re-measure after any rebuild.</li>
+<li><strong>A single TCP stream on the GB10's ARM cores.</strong> A single iperf3 stream sits near
+   12 Gb/s no matter what the link is doing, which is numerically almost identical to the
+   throttled RDMA figure above. That coincidence is how the throttle hid for weeks. Use
+   <code>ib_write_bw</code> as the authority for link health; treat single-stream iperf3 as a CPU
+   benchmark.</li>
+</ol>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>NVIDIA DGX Spark User Guide, ConnectX-7 Networking: <a href="https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html">https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html</a>
+  (port count, 200 Gb/s per port, approved cables, two PCIe Gen 5 x4 links, interface names, direct up to 3, switched up to 4)</li>
+<li>NVIDIA, Connect Two Sparks: <a href="https://build.nvidia.com/spark/connect-two-sparks">https://build.nvidia.com/spark/connect-two-sparks</a></li>
+<li>Petronella Technology Group, Inc., DGX Spark cluster cable: <a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">https://petronellatech.com/hardware/dgx-spark-cluster-cable/</a>
+  (variant list, cable spec, 400G-rated / 200G link, "capacity play, not a raw speed boost")</li>
+<li>Petronella Technology Group, Inc., DGX Spark memory bandwidth, 273 GB/s, and what 400G adds:
+  <a href="https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/">https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/</a>
+  (128 GB LPDDR5x 256-bit 4266 MHz 273 GB/s, 13 to 111.86 Gb/s driver story, 185 to 190 Gb/s field reports, 200B / 405B model capacity, 25 GB/s arithmetic)</li>
+<li>Our measurements, 2026-08-15 (111.86 / 196.08 Gb/s, 12.74 Gb/s throttle, 1,963 / 8.3 tok/s single node, 12 Gb/s single-stream TCP) and 2026-08-28 / 2026-08-31 (switched fabric); see <a href="../validation/">04-validation.md</a></li>
+</ul>
+</article>
+<p class="src"><a href="https://github.com/capetron/gb10-cluster-guide/blob/main/docs/01-hardware.md">View or correct this page on GitHub</a></p>
+</main>
+</div>
+<footer>
+<p>Maintained by <a href="https://petronellatech.com/">Petronella Technology Group, Inc.</a>. Text licensed
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Source: <a href="https://github.com/capetron/gb10-cluster-guide">github.com/capetron/gb10-cluster-guide</a>.</p>
+</footer>
+</body>
+</html>
