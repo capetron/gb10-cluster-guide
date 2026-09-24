@@ -300,6 +300,11 @@ def main():
     (OUT / ".nojekyll").write_text("")
     (OUT / "robots.txt").write_text("User-agent: *\nAllow: /\n\nSitemap: " + BASE + "sitemap.xml\n")
     (OUT / (INDEXNOW_KEY + ".txt")).write_text(INDEXNOW_KEY)
+    # Search engine ownership files (e.g. google<token>.html) live in site/verify/ and are copied
+    # to the site root verbatim so a rebuild never drops a verification.
+    for vf in sorted((ROOT / "site" / "verify").glob("*")) if (ROOT / "site" / "verify").is_dir() else []:
+        if vf.name != "README.txt":
+            shutil.copyfile(vf, OUT / vf.name)
     sm = ['<?xml version="1.0" encoding="UTF-8"?>',
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for u, mod in urls:
