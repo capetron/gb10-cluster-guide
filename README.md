@@ -94,6 +94,26 @@ and [docs/05-serving-models.md](docs/05-serving-models.md).
 | Qwen3.8-Flash-Next NVFP4, TP4 + expert parallel, six streams | 167.4 tok/s aggregate |
 | Six nodes as three TP2 pairs, pool aggregate | ~386 tok/s decode, ~9,450 tok/s prefill |
 
+## Health check tool
+
+The checks in this guide are automated in a companion tool,
+[capetron/gb10-cluster-check](https://github.com/capetron/gb10-cluster-check) (MIT). It runs
+on one node, changes nothing, and prints a PASS / WARN / FAIL / SKIP line per check: link
+state and speed on both PCIe halves of each port, link drops since boot, the cable module
+(vendor, part, length, needs root), MTU across the fabric interfaces, IPv4 addressing and
+routes (one subnet per half, no default route on the fabric, no stale bond holding a
+route), RoCE v2 GID index, the NCCL environment variables, and peer reachability with a
+jumbo do-not-fragment ping. An opt-in `--bw` flag runs the `ib_write_bw` and `iperf3`
+clients from [docs/04-validation.md](docs/04-validation.md) against a server you start.
+
+```
+git clone https://github.com/capetron/gb10-cluster-check.git
+cd gb10-cluster-check
+./gb10-cluster-check --peer <fabric address of a neighbour>
+```
+
+Run it on every node after cabling, and again after any OS, driver or firmware update.
+
 ## Where the product links live
 
 - Cable hub: https://petronellatech.com/hardware/dgx-spark-cluster-cable/
