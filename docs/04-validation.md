@@ -25,6 +25,32 @@ session, and what the `packet_seq_err` counter is telling you.
 - **NIC counters** (`ethtool -S`, and the RDMA hardware counters under
   `/sys/class/infiniband/<hca>/ports/1/hw_counters/`) tell you whether loss is happening.
 
+## Health check tool
+
+Everything in this document up to the bandwidth matrix, plus the link, cable, MTU,
+addressing and NCCL checks from [02-two-and-three-nodes.md](02-two-and-three-nodes.md),
+is automated in [capetron/gb10-cluster-check](https://github.com/capetron/gb10-cluster-check)
+(MIT, Python standard library only). It is read-only: every command it runs is a query.
+Run it on each node before the first `ib_write_bw`:
+
+```
+git clone https://github.com/capetron/gb10-cluster-check.git
+cd gb10-cluster-check
+./gb10-cluster-check --peer 198.51.100.2 --peer 203.0.113.2   # one address per half
+sudo ./gb10-cluster-check                                     # adds the cable EEPROM check
+./gb10-cluster-check --peer 198.51.100.2 --bw                 # after starting the servers there
+```
+
+It verifies, per node: both PCIe halves of each cabled port up at 200G and the count of
+link drops since boot; the RDMA device behind each interface and its RoCE error counters;
+the cable module's vendor, part number and length; MTU 9000 on every fabric interface;
+one subnet per half, no default route via the fabric, and no stale bond or profile still
+holding a route; the RoCE v2 GID index for each half's address; `NCCL_SOCKET_IFNAME`,
+`NCCL_IB_HCA` and `NCCL_IB_GID_INDEX` against what it found; and each peer with a small
+ping and a jumbo do-not-fragment ping. The `--bw` run uses the `ib_write_bw` flags below
+and judges one half against the 109 to 112 Gb/s baseline. Exit code 1 means at least one
+FAIL, which is the signal to stop and fix before measuring anything.
+
 ## Finding the RDMA device and GID index
 
 Each QSFP port has two RDMA devices, one per PCIe half (`rocep1s0f0` and `roceP2p1s0f0`
