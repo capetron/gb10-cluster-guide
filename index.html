@@ -17,14 +17,14 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
 <meta property="og:locale" content="en_US">
-<meta property="article:modified_time" content="2026-09-24">
+<meta property="article:modified_time" content="2026-09-25">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Clustering NVIDIA GB10 Workstations: DGX Spark Cluster Guide">
 <meta name="twitter:description" content="How to cluster NVIDIA GB10 workstations (DGX Spark and OEM units): one cable for two, a three-node ring, and a measured 200G RoCE switch fabric.">
 <meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
 <link rel="stylesheet" href="style.css">
 <link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Clustering NVIDIA GB10 Workstations: DGX Spark Cluster Guide", "description": "How to cluster NVIDIA GB10 workstations (DGX Spark and OEM units): one cable for two, a three-node ring, and a measured 200G RoCE switch fabric.", "url": "https://capetron.github.io/gb10-cluster-guide/", "dateModified": "2026-09-24", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Clustering NVIDIA GB10 Workstations: DGX Spark Cluster Guide", "description": "How to cluster NVIDIA GB10 workstations (DGX Spark and OEM units): one cable for two, a three-node ring, and a measured 200G RoCE switch fabric.", "url": "https://capetron.github.io/gb10-cluster-guide/", "dateModified": "2026-09-25", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
 </head>
 <body>
 <header class="top"><a class="brand" href="./">GB10 Cluster Guide</a>
@@ -200,6 +200,21 @@ and <a href="serving-models/">docs/05-serving-models.md</a>.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="health-check-tool">Health check tool</h2>
+<p>The checks in this guide are automated in a companion tool,
+<a href="https://github.com/capetron/gb10-cluster-check">capetron/gb10-cluster-check</a> (MIT). It runs
+on one node, changes nothing, and prints a PASS / WARN / FAIL / SKIP line per check: link
+state and speed on both PCIe halves of each port, link drops since boot, the cable module
+(vendor, part, length, needs root), MTU across the fabric interfaces, IPv4 addressing and
+routes (one subnet per half, no default route on the fabric, no stale bond holding a
+route), RoCE v2 GID index, the NCCL environment variables, and peer reachability with a
+jumbo do-not-fragment ping. An opt-in <code>--bw</code> flag runs the <code>ib_write_bw</code> and <code>iperf3</code>
+clients from <a href="validation/">docs/04-validation.md</a> against a server you start.</p>
+<pre><code>git clone https://github.com/capetron/gb10-cluster-check.git
+cd gb10-cluster-check
+./gb10-cluster-check --peer &lt;fabric address of a neighbour&gt;
+</code></pre>
+<p>Run it on every node after cabling, and again after any OS, driver or firmware update.</p>
 <h2 id="where-the-product-links-live">Where the product links live</h2>
 <ul>
 <li>Cable hub: <a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">https://petronellatech.com/hardware/dgx-spark-cluster-cable/</a></li>

@@ -17,14 +17,14 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
 <meta property="og:locale" content="en_US">
-<meta property="article:modified_time" content="2026-09-05">
+<meta property="article:modified_time" content="2026-09-24">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="DGX Spark Cluster Bill of Materials, 2 to 8 Nodes">
 <meta name="twitter:description" content="What a GB10 cluster needs by node count: cables, a 200G switch, breakout and inter-switch DACs, and a fabric budget from two to eight nodes.">
 <meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
 <link rel="stylesheet" href="../style.css">
 <link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "DGX Spark Cluster Bill of Materials, 2 to 8 Nodes", "description": "What a GB10 cluster needs by node count: cables, a 200G switch, breakout and inter-switch DACs, and a fabric budget from two to eight nodes.", "url": "https://capetron.github.io/gb10-cluster-guide/bill-of-materials/", "dateModified": "2026-09-05", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "DGX Spark Cluster Bill of Materials, 2 to 8 Nodes", "description": "What a GB10 cluster needs by node count: cables, a 200G switch, breakout and inter-switch DACs, and a fabric budget from two to eight nodes.", "url": "https://capetron.github.io/gb10-cluster-guide/bill-of-materials/", "dateModified": "2026-09-24", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
 </head>
 <body>
 <header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
@@ -41,9 +41,9 @@ inter-switch link. This is what we bought, with the prices we paid or list at
 publication, and what we would budget. Every GB10 variant uses the same QSFP112 port
 and the same cable.</p>
 <h2 id="cables">Cables</h2>
-<p>The cluster cable is a 0.5 m (about 19 in) QSFP112 passive direct-attach copper cable,
-32 AWG, to the NVIDIA-approved Amphenol NJAAKK0006 / Luxshare LMTQF022-SD-R
-specification. It is rated 400G and links at 200G on every GB10 (see
+<p>The cluster cable is a 0.5 m (about 19 in) QSFP112 passive direct-attach copper cable
+to the NVIDIA-approved Amphenol NJAAKK0006 / Luxshare LMTQF022-SD-R specification (the
+one we stock is Amphenol NJAAKR-0006, 30 AWG). It is rated 400G and links at 200G on every GB10 (see
 <a href="../hardware/">01-hardware.md</a>). One cable per node in every topology below.</p>
 <table>
 <thead>

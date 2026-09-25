@@ -17,14 +17,14 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
 <meta property="og:locale" content="en_US">
-<meta property="article:modified_time" content="2026-09-05">
+<meta property="article:modified_time" content="2026-09-25">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Validate a DGX Spark Cluster Fabric: ib_write_bw and iperf3">
 <meta name="twitter:description" content="How to prove a GB10 cluster fabric runs at line rate: ib_write_bw and iperf3 commands, measured results, and what packet_seq_err means.">
 <meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
 <link rel="stylesheet" href="../style.css">
 <link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Validate a DGX Spark Cluster Fabric: ib_write_bw and iperf3", "description": "How to prove a GB10 cluster fabric runs at line rate: ib_write_bw and iperf3 commands, measured results, and what packet_seq_err means.", "url": "https://capetron.github.io/gb10-cluster-guide/validation/", "dateModified": "2026-09-05", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Validate a DGX Spark Cluster Fabric: ib_write_bw and iperf3", "description": "How to prove a GB10 cluster fabric runs at line rate: ib_write_bw and iperf3 commands, measured results, and what packet_seq_err means.", "url": "https://capetron.github.io/gb10-cluster-guide/validation/", "dateModified": "2026-09-25", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
 </head>
 <body>
 <header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
@@ -58,6 +58,27 @@ session, and what the <code>packet_seq_err</code> counter is telling you.</p>
 <li><strong>NIC counters</strong> (<code>ethtool -S</code>, and the RDMA hardware counters under
   <code>/sys/class/infiniband/&lt;hca&gt;/ports/1/hw_counters/</code>) tell you whether loss is happening.</li>
 </ul>
+<h2 id="health-check-tool">Health check tool</h2>
+<p>Everything in this document up to the bandwidth matrix, plus the link, cable, MTU,
+addressing and NCCL checks from <a href="../two-and-three-nodes/">02-two-and-three-nodes.md</a>,
+is automated in <a href="https://github.com/capetron/gb10-cluster-check">capetron/gb10-cluster-check</a>
+(MIT, Python standard library only). It is read-only: every command it runs is a query.
+Run it on each node before the first <code>ib_write_bw</code>:</p>
+<pre><code>git clone https://github.com/capetron/gb10-cluster-check.git
+cd gb10-cluster-check
+./gb10-cluster-check --peer 198.51.100.2 --peer 203.0.113.2   # one address per half
+sudo ./gb10-cluster-check                                     # adds the cable EEPROM check
+./gb10-cluster-check --peer 198.51.100.2 --bw                 # after starting the servers there
+</code></pre>
+<p>It verifies, per node: both PCIe halves of each cabled port up at 200G and the count of
+link drops since boot; the RDMA device behind each interface and its RoCE error counters;
+the cable module's vendor, part number and length; MTU 9000 on every fabric interface;
+one subnet per half, no default route via the fabric, and no stale bond or profile still
+holding a route; the RoCE v2 GID index for each half's address; <code>NCCL_SOCKET_IFNAME</code>,
+<code>NCCL_IB_HCA</code> and <code>NCCL_IB_GID_INDEX</code> against what it found; and each peer with a small
+ping and a jumbo do-not-fragment ping. The <code>--bw</code> run uses the <code>ib_write_bw</code> flags below
+and judges one half against the 109 to 112 Gb/s baseline. Exit code 1 means at least one
+FAIL, which is the signal to stop and fix before measuring anything.</p>
 <h2 id="finding-the-rdma-device-and-gid-index">Finding the RDMA device and GID index</h2>
 <p>Each QSFP port has two RDMA devices, one per PCIe half (<code>rocep1s0f0</code> and <code>roceP2p1s0f0</code>
 for Port 0). RoCE v2 needs a GID index that maps to the IPv4 address on that half, and
