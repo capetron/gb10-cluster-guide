@@ -37,6 +37,7 @@ PAGES = [
     ("docs/06-bill-of-materials.md", "bill-of-materials/", "Bill of materials"),
     ("docs/07-faq.md", "faq/", "FAQ"),
     ("docs/08-parts-and-where-to-buy.md", "parts-and-where-to-buy/", "Parts and where to buy"),
+    ("docs/09-compatibility.md", "compatibility/", "Compatibility by part and model"),
     ("docs/SANITIZATION-NOTES.md", "sanitization-notes/", "Sanitization notes"),
 ]
 
@@ -60,6 +61,7 @@ DESCRIPTIONS = {
             "switches, measured bandwidth and what clustering does for model speed.",
     "parts-and-where-to-buy/": "Which QSFP112 cable fits a DGX Spark or GB10 cluster: NVIDIA-approved "
                                "Amphenol and Luxshare parts, Lenovo 4X91U42988, switches, and sellers.",
+    "compatibility/": "Which QSFP112 cable fits each GB10 workstation: part numbers, NVIDIA-listed and owner-reported cables, and fit notes for DGX Spark, ASUS, Dell, MSI, HP, Lenovo, Acer and Gigabyte units.",
     "sanitization-notes/": "What was generalized from our production notes to publish this GB10 "
                            "cluster guide: addressing, hostnames and other internal details.",
 }
@@ -74,6 +76,7 @@ TITLES = {
     "bill-of-materials/": "DGX Spark Cluster Bill of Materials, 2 to 8 Nodes",
     "faq/": "DGX Spark and GB10 Clustering FAQ",
     "parts-and-where-to-buy/": "DGX Spark Cluster Parts and Where to Buy Them",
+    "compatibility/": "GB10 and DGX Spark Cable Compatibility by Part and Model",
     "sanitization-notes/": "Sanitization Notes for the GB10 Cluster Guide",
 }
 

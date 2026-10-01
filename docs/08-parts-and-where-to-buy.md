@@ -59,6 +59,8 @@ The 0.4 m parts suit units stacked directly on each other; 0.5 m gives a few mor
 for side-by-side units and for the longest run in a three-node ring. Outside the United
 States, or with no deadline, the Lenovo part is a sensible low-cost route.
 
+Part-by-part and model-by-model detail is in [09-compatibility.md](09-compatibility.md).
+
 ## Switch and switch cables (four nodes or more)
 
 | Part | What it does | Notes |

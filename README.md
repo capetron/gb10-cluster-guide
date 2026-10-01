@@ -70,6 +70,7 @@ How many GB10 workstations?
 | [docs/06-bill-of-materials.md](docs/06-bill-of-materials.md) | Cables, switch, breakout and ISL DACs, what to budget |
 | [docs/07-faq.md](docs/07-faq.md) | Short answers to the questions we get asked |
 | [docs/08-parts-and-where-to-buy.md](docs/08-parts-and-where-to-buy.md) | The NVIDIA-approved cables, other parts owners report working, the switch parts, and where each is sold |
+| [docs/09-compatibility.md](docs/09-compatibility.md) | Cable compatibility by part number and by GB10 model, with what each source supports |
 | [docs/SANITIZATION-NOTES.md](docs/SANITIZATION-NOTES.md) | What was generalized from our production notes to make this public |
 
 ## The numbers in one screen
