@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB10 and DGX Spark Cable Compatibility by Part and Model</title>
+<meta name="description" content="Which QSFP112 cable fits each GB10 workstation: part numbers, NVIDIA-listed and owner-reported cables, and fit notes for DGX Spark, ASUS, Dell, MSI, HP, Lenovo, Acer and Gigabyte units.">
+<link rel="canonical" href="https://capetron.github.io/gb10-cluster-guide/compatibility/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GB10 Cluster Guide">
+<meta property="og:title" content="GB10 and DGX Spark Cable Compatibility by Part and Model">
+<meta property="og:description" content="Which QSFP112 cable fits each GB10 workstation: part numbers, NVIDIA-listed and owner-reported cables, and fit notes for DGX Spark, ASUS, Dell, MSI, HP, Lenovo, Acer and Gigabyte units.">
+<meta property="og:url" content="https://capetron.github.io/gb10-cluster-guide/compatibility/">
+<meta property="og:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clustering NVIDIA GB10 workstations">
+<meta property="og:locale" content="en_US">
+<meta property="article:modified_time" content="2026-10-01">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GB10 and DGX Spark Cable Compatibility by Part and Model">
+<meta name="twitter:description" content="Which QSFP112 cable fits each GB10 workstation: part numbers, NVIDIA-listed and owner-reported cables, and fit notes for DGX Spark, ASUS, Dell, MSI, HP, Lenovo, Acer and Gigabyte units.">
+<meta name="twitter:image" content="https://capetron.github.io/gb10-cluster-guide/og.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="sitemap" type="application/xml" href="https://capetron.github.io/gb10-cluster-guide/sitemap.xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "GB10 and DGX Spark Cable Compatibility by Part and Model", "description": "Which QSFP112 cable fits each GB10 workstation: part numbers, NVIDIA-listed and owner-reported cables, and fit notes for DGX Spark, ASUS, Dell, MSI, HP, Lenovo, Acer and Gigabyte units.", "url": "https://capetron.github.io/gb10-cluster-guide/compatibility/", "dateModified": "2026-10-01", "inLanguage": "en", "license": "https://creativecommons.org/licenses/by/4.0/", "image": "https://capetron.github.io/gb10-cluster-guide/og.png", "author": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "publisher": {"@type": "Organization", "name": "Petronella Technology Group, Inc.", "url": "https://petronellatech.com/"}, "isPartOf": {"@type": "WebSite", "name": "GB10 Cluster Guide", "url": "https://capetron.github.io/gb10-cluster-guide/"}}</script>
+</head>
+<body>
+<header class="top"><a class="brand" href="../">GB10 Cluster Guide</a>
+<span class="tag">DGX Spark and every GB10 workstation</span></header>
+<div class="wrap">
+<nav class="side" aria-label="Guide sections"><ol><li><a href="../">Overview</a></li><li><a href="../hardware/">Hardware</a></li><li><a href="../two-and-three-nodes/">Two and three nodes</a></li><li><a href="../switched-fabric/">Switched fabric</a></li><li><a href="../validation/">Validation</a></li><li><a href="../serving-models/">Serving models</a></li><li><a href="../bill-of-materials/">Bill of materials</a></li><li><a href="../faq/">FAQ</a></li><li><a href="../parts-and-where-to-buy/">Parts and where to buy</a></li><li><a href="../compatibility/" aria-current="page">Compatibility by part and model</a></li><li><a href="../sanitization-notes/">Sanitization notes</a></li></ol></nav>
+<main>
+<article>
+<h1 id="09-cable-compatibility-by-part-number-and-by-gb10-model">09. Cable compatibility by part number and by GB10 model</h1>
+<p><strong>Summary.</strong> Every GB10 workstation uses the same ConnectX-7 QSFP112 port, so the same
+short QSFP112 passive DAC fits all of them. This page lists each cable part number we know
+of, what NVIDIA or the vendor says about it, and what owners report, then gives the fit
+notes per GB10 model. It states only what a source supports. Part numbers are not treated
+as interchangeable unless a source says so.</p>
+<h2 id="part-numbers">Part numbers</h2>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Length</th>
+<th>AWG</th>
+<th>What the source says</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amphenol NJAAKK-N911</td>
+<td>400 mm</td>
+<td>32</td>
+<td>Listed as NVIDIA-approved in the DGX Spark user guide</td>
+<td>NVIDIA DGX Spark User Guide, ConnectX-7 Networking</td>
+</tr>
+<tr>
+<td>Amphenol NJAAKK0006</td>
+<td>0.5 m</td>
+<td>n/a</td>
+<td>Listed as NVIDIA-approved (the 0.5 m version of NJAAKK-N911)</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Luxshare LMTQF022-SD-R</td>
+<td>400 mm</td>
+<td>30</td>
+<td>Listed as NVIDIA-approved</td>
+<td>same</td>
+</tr>
+<tr>
+<td>NVIDIA Marketplace "QSFP Cable 0.4m for DGX Spark"</td>
+<td>0.4 m</td>
+<td>n/a</td>
+<td>The cable NVIDIA's clustering playbooks link</td>
+<td>NVIDIA Marketplace</td>
+</tr>
+<tr>
+<td>Lenovo 4X91U42988</td>
+<td>0.4 m</td>
+<td>n/a</td>
+<td>Lenovo first-party link cable; owners report full-rate links between GB10 units</td>
+<td>NVIDIA developer forum threads 381031, 362679</td>
+</tr>
+<tr>
+<td>Amphenol NJAAKR-0006</td>
+<td>0.5 m</td>
+<td>30</td>
+<td>Same Amphenol QSFP112 family. Not on NVIDIA's list by this part number. Owners report full-rate links</td>
+<td>NVIDIA developer forum thread 362403; distributor listings</td>
+</tr>
+</tbody>
+</table>
+<p>Notes:</p>
+<ul>
+<li>NJAAKR-0006 is the part Petronella Technology Group, Inc. stocks. We do not claim it is
+  the same part as NJAAKK0006 or LMTQF022-SD-R. We say it is a 0.5 m, 30 AWG cable in the
+  same Amphenol QSFP112 family, built for the same port.</li>
+<li>We measured 196.08 Gb/s (98.04 + 98.04, both PCIe halves active) on a direct cable and
+  recorded the cable module data with <code>gb10-cluster-check</code>. One measurement on one
+  cable is not a certification; see <a href="../validation/">04-validation.md</a> for the method.</li>
+<li>A 400G rating on a label is headroom. A GB10 port links at 200 Gb/s
+  (<a href="../hardware/">01-hardware.md</a>).</li>
+</ul>
+<h2 id="by-gb10-model">By GB10 model</h2>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Port</th>
+<th>Cable</th>
+<th>Fit notes page</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NVIDIA DGX Spark Founders Edition</td>
+<td>ConnectX-7 QSFP112</td>
+<td>Any cable in the table above</td>
+<td><a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">DGX Spark and GB10 cluster cable</a></td>
+</tr>
+<tr>
+<td>ASUS Ascent GX10</td>
+<td>same</td>
+<td>same</td>
+<td><a href="https://petronellatech.com/hardware/asus-gx10-cluster-cable/">ASUS Ascent GX10 cluster cable</a></td>
+</tr>
+<tr>
+<td>Dell Pro Max with GB10</td>
+<td>same</td>
+<td>same</td>
+<td><a href="https://petronellatech.com/hardware/dell-pro-max-gb10-cluster-cable/">Dell Pro Max GB10 cluster cable</a></td>
+</tr>
+<tr>
+<td>MSI EdgeXpert</td>
+<td>same</td>
+<td>same</td>
+<td><a href="https://petronellatech.com/hardware/msi-edgexpert-cluster-cable/">MSI EdgeXpert cluster cable</a></td>
+</tr>
+<tr>
+<td>HP ZGX Nano</td>
+<td>same</td>
+<td>same</td>
+<td><a href="https://petronellatech.com/hardware/hp-zgx-nano-cluster-cable/">HP ZGX Nano cluster cable</a></td>
+</tr>
+<tr>
+<td>Lenovo ThinkStation PGX</td>
+<td>same</td>
+<td>same (Lenovo sells its own 4X91U42988)</td>
+<td><a href="https://petronellatech.com/hardware/lenovo-thinkstation-pgx-cluster-cable/">Lenovo ThinkStation PGX cluster cable</a></td>
+</tr>
+<tr>
+<td>Acer Veriton GN100</td>
+<td>same</td>
+<td>same</td>
+<td><a href="https://petronellatech.com/hardware/acer-veriton-gn100-cluster-cable/">Acer Veriton GN100 cluster cable</a></td>
+</tr>
+<tr>
+<td>Gigabyte AI TOP ATOM</td>
+<td>same</td>
+<td>same</td>
+<td><a href="https://petronellatech.com/hardware/gigabyte-ai-top-atom-cluster-cable/">Gigabyte AI TOP ATOM cluster cable</a></td>
+</tr>
+</tbody>
+</table>
+<p>We ran four MSI EdgeXpert MS-C931 and two DGX Spark Founders Edition units. We did not
+test the other models ourselves; the shared chip and port come from NVIDIA's GB10
+documentation and each vendor's specification.</p>
+<h2 id="choosing-a-length">Choosing a length</h2>
+<p>0.4 m suits units stacked directly on each other. 0.5 m adds a few inches for
+side-by-side units and for the longest run in a three-node ring. Four or more nodes need a
+switch (<a href="../switched-fabric/">03-switched-fabric.md</a>).</p>
+<h2 id="where-to-buy">Where to buy</h2>
+<p>See <a href="../parts-and-where-to-buy/">08-parts-and-where-to-buy.md</a> for every seller we know
+of. In the United States, Petronella Technology Group, Inc. sells the NJAAKR-0006 and ships
+in 1 to 3 business days: <a href="https://petronellatech.com/hardware/dgx-spark-cluster-cable/">the cable hub</a>.
+Our measured benchmark tables for these clusters are at
+<a href="https://petronellatech.com/ai/llm-benchmarks/">petronellatech.com/ai/llm-benchmarks/</a>.</p>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>NVIDIA DGX Spark User Guide, ConnectX-7 Networking: <a href="https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html">https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html</a></li>
+<li>NVIDIA, Connect Three DGX Spark in a Ring Topology: <a href="https://build.nvidia.com/spark/connect-three-sparks">https://build.nvidia.com/spark/connect-three-sparks</a></li>
+<li>NVIDIA developer forum owner reports: <a href="https://forums.developer.nvidia.com/t/381031">https://forums.developer.nvidia.com/t/381031</a> , <a href="https://forums.developer.nvidia.com/t/362679">https://forums.developer.nvidia.com/t/362679</a> , <a href="https://forums.developer.nvidia.com/t/362403">https://forums.developer.nvidia.com/t/362403</a></li>
+<li>Our measurements: <a href="../validation/">04-validation.md</a></li>
+</ul>
+</article>
+<p class="src"><a href="https://github.com/capetron/gb10-cluster-guide/blob/main/docs/09-compatibility.md">View or correct this page on GitHub</a></p>
+</main>
+</div>
+<footer>
+<p>Maintained by <a href="https://petronellatech.com/">Petronella Technology Group, Inc.</a>. Text licensed
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Source: <a href="https://github.com/capetron/gb10-cluster-guide">github.com/capetron/gb10-cluster-guide</a>.</p>
+</footer>
+</body>
+</html>
