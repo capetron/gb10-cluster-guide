@@ -61,6 +61,36 @@ States, or with no deadline, the Lenovo part is a sensible low-cost route.
 
 Part-by-part and model-by-model detail is in [09-compatibility.md](09-compatibility.md).
 
+### Part numbers decoded
+
+The table above shows four part numbers for what is, electrically, one cable. Reading them:
+
+- **NJAAKK-N911** is the Amphenol part NVIDIA's retail channel lists as the DGX Spark
+  Stacking DAC Cable: QSFP to QSFP112, 32 AWG, 400 mm, LSZH jacket. The N911 suffix is a
+  length and build variant inside Amphenol's NJAAKK family.
+- **NJAAKK0006** is the 0.5 m sibling of the N911 and the name NVIDIA's Spark Stacking
+  documentation uses for the specification itself.
+- **LMTQF022-SD-R** is Luxshare's build of the same specification: 400 mm and 30 AWG. NVIDIA
+  approving both a 32 AWG and a 30 AWG cable for the same port is the clearest evidence that
+  wire gauge does not matter at these lengths (a lower AWG number is a thicker conductor).
+- **NJAAKR-0006** is the 0.5 m, 30 AWG Amphenol cable we validated and stock. It is built to
+  the NJAAKK0006 / LMTQF022-SD-R specification and is not the same part number as any of the
+  three NVIDIA lists. On a direct link it measured 111.86 Gb/s on one PCIe half and
+  196.08 Gb/s with both halves active, the baselines in
+  [04-validation.md](04-validation.md#baselines-direct-cable).
+
+A longer walk through the part numbers, with the user-guide wording quoted, is in our
+[part-number explainer](https://petronellatech.com/blog/njaakk-n911-vs-njaakk0006-dgx-spark-cable-part-numbers/).
+
+### The 64 GB DGX Spark
+
+NVIDIA now lists the DGX Spark in 64 GB and 128 GB memory configurations, with the 64 GB
+configuration sold through participating OEM partners only. Both use the same GB10 and the
+same ConnectX-7 NIC at 200 Gb/s, so every cable and topology note in this guide applies to
+the 64 GB units unchanged, and pairing two of them over one cable is the same job as pairing
+two 128 GB units. Memory, not the link, is what changes: a 64 GB unit holds smaller models on its own,
+which is one more reason buyers of the 64 GB units pair two of them.
+
 ## Switch and switch cables (four nodes or more)
 
 | Part | What it does | Notes |
@@ -82,6 +112,7 @@ switch, or a test that only uses one PCIe half. Run the checks in
 
 ## Sources
 
+- NVIDIA DGX Spark product page (64 GB or 128 GB memory configurations; 64 GB through participating OEM partners; ConnectX-7 NIC at 200 Gbps): https://www.nvidia.com/en-us/products/workstations/dgx-spark/
 - NVIDIA DGX Spark User Guide, ConnectX-7 Networking (approved cables, 200 Gb/s per port, direct up to three systems, switch up to four): https://docs.nvidia.com/dgx/dgx-spark/spark-clustering.html
 - NVIDIA, Connect Three DGX Spark in a Ring Topology (port-by-port ring wiring): https://build.nvidia.com/spark/connect-three-sparks
 - NVIDIA developer forum, owner reports on the Lenovo 4X91U42988 and Amphenol NJAAKR-0006 (August and September 2026): https://forums.developer.nvidia.com/t/381031 , https://forums.developer.nvidia.com/t/362679 , https://forums.developer.nvidia.com/t/362403

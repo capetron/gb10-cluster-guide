@@ -120,6 +120,7 @@ Run it on every node after cabling, and again after any OS, driver or firmware u
 - Cable hub: https://petronellatech.com/hardware/dgx-spark-cluster-cable/
 - Ring kit and bundles: https://petronellatech.com/blog/dgx-spark-cluster-cables-in-stock-0-5m-qsfp112-400g-dac-for-every-gb10-workstation-159-shipped/
 - Why 400G on the label and 200G on the link: https://petronellatech.com/blog/dgx-spark-cluster-bandwidth-what-400g-really-means/
+- The four cable part numbers decoded (NJAAKK-N911, NJAAKK0006, LMTQF022-SD-R, NJAAKR-0006): https://petronellatech.com/blog/njaakk-n911-vs-njaakk0006-dgx-spark-cable-part-numbers/
 - Our self-hosted LLM benchmarks, including the four-GB10 rows: https://petronellatech.com/ai/llm-benchmarks/
 
 Prices at publication: single cable $159, 2-pack $299, 3-pack ring kit $435, free shipping
