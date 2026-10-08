@@ -1,0 +1,16 @@
+date,topology,nodes,path,tool,flags,result_gbps,notes
+2026-08-15,direct cable,2,one PCIe half,ib_write_bw,-d rocep1s0f0 -x 3 -F -q 8 -s 1048576 -D 10 --report_gbits,111.86,0.5 m QSFP112 DAC Amphenol NJAAKR-0006; after driver 580.142 to 580.159.03
+2026-08-15,direct cable,2,both halves concurrently,ib_write_bw,-q 8 -s 1048576 -D 10 --report_gbits on rocep1s0f0 and roceP2p1s0f0,196.08,98.04 + 98.04; 98 percent of the 200 Gb/s line rate
+2026-08-15,direct cable,2,one PCIe half on a firmware power-throttled NIC,ib_write_bw,-q 8 -s 1048576 -D 10 --report_gbits,12.74,before the OS and driver update; link showed 200G RS-FEC PCIe Gen5 x4 and clean mstlink
+2026-08-15,direct cable,2,single TCP stream,iperf3,default,12,approximate; limited by the ARM cores not the link
+2026-08-28,one switch,2,MSI pair both halves crossing the switch ASIC,ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits on both halves,196,98.0 + 98.0; no PFC no ECN
+2026-08-28,one switch,2,MSI pair both halves TCP,iperf3,default per half,185.7,93.1 + 92.6
+2026-08-28,one switch,2,DGX Spark pair through switch B one half,ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,109.11,direct-cable baseline 111.86; switch penalty about 0.75 Gb/s per half
+2026-08-31,two switches,6,R1 three intra-switch pairs concurrent,ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,327.8,109.31 + 109.22 + 109.27 aggregate; packet_seq_err growth 0
+2026-08-31,two switches,6,R2a one cross-switch flow over the 200G ISL,ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,109.08,no measurable ISL penalty
+2026-08-31,two switches,6,R2b two same-direction cross-switch flows sharing the ISL,ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,163.8,81.92 + 81.90 fair split; plus 109.13 intra-switch; packet_seq_err grew about 5500
+2026-08-31,two switches,6,R3 bidirectional ISL plus one intra pair,ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,327.4,109.19 + 109.10 + 109.14 aggregate; packet_seq_err growth 0
+2026-08-31,two switches,6,cross-switch with the ISL blocked by RSTP (misconfiguration),ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,4.47,traffic detoured over the campus LAN at MTU 1500; fixed by raising the second uplink RSTP cost
+2026-08-31,one switch,2,DGX Spark pair with the fabric in a second CPU-forwarded bridge (misconfiguration),ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,4.9,was 109 in the single hardware-offloaded bridge
+2026-08-31,one switch,2,MSI pair both halves with the fabric in a second bridge (misconfiguration),ib_write_bw,-x 3 -F -D 6 -s 65536 --report_gbits,4.85,was 196 in the single bridge
+2026-08-31,one switch,2,TCP with the fabric in a second bridge (misconfiguration),iperf3,default,8.8,was 93 in the single bridge
