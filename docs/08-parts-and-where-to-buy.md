@@ -86,8 +86,8 @@ NVIDIA now lists the DGX Spark in 64 GB and 128 GB memory configurations, with t
 configuration sold through participating OEM partners only. Both use the same GB10 and the
 same ConnectX-7 NIC at 200 Gb/s, so every cable and topology note in this guide applies to
 the 64 GB units unchanged, and pairing two of them over one cable is the same job as pairing
-two 128 GB units. Memory, not the link, is what changes: see [01-hardware.md](01-hardware.md)
-for what the smaller memory means for model size.
+two 128 GB units. Memory, not the link, is what changes: a 64 GB unit holds smaller models on its own,
+which is one more reason buyers of the 64 GB units pair two of them.
 
 ## Switch and switch cables (four nodes or more)
 
