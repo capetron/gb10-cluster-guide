@@ -71,6 +71,7 @@ How many GB10 workstations?
 | [docs/07-faq.md](docs/07-faq.md) | Short answers to the questions we get asked |
 | [docs/08-parts-and-where-to-buy.md](docs/08-parts-and-where-to-buy.md) | The NVIDIA-approved cables, other parts owners report working, the switch parts, and where each is sold |
 | [docs/09-compatibility.md](docs/09-compatibility.md) | Cable compatibility by part number and by GB10 model, with what each source supports |
+| [docs/10-benchmark-data.md](docs/10-benchmark-data.md) | Every bandwidth and serving measurement in one citable place, with commands, dates and a CSV (`data/`) |
 | [docs/SANITIZATION-NOTES.md](docs/SANITIZATION-NOTES.md) | What was generalized from our production notes to make this public |
 
 ## The numbers in one screen

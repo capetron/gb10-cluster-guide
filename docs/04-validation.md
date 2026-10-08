@@ -13,6 +13,9 @@ bidirectional ISL. It also explains why a single TCP stream is the wrong tool, h
 find the right GID index, why a background `ib_write_bw` server dies with your SSH
 session, and what the `packet_seq_err` counter is telling you.
 
+Every figure below is also collected, with its command line and date, in
+[10-benchmark-data.md](10-benchmark-data.md) and the CSV under `data/`, for citing or re-plotting.
+
 ## The tools and why
 
 - **`ib_write_bw`** (from the `perftest` package) drives RDMA writes between two hosts and
